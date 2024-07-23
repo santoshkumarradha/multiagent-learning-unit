@@ -98,7 +98,9 @@ class MLU:
                 disable_logging=disable_loging,
             )
         else:
-            self.operational_agent = self.custom_analysis_agent
+            self.operational_agent = lambda input: self.custom_analysis_agent(
+                prompt, input
+            )
 
     def initialize_agents(self):
         class PromptGenerationOutput(BaseModel):
