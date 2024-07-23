@@ -261,15 +261,6 @@ class MLU:
             disable_logging=disable_loging,  # To disable sql for multithreading
         )
 
-    def create_operational_agent(self, prompt):
-        self.operational_agent = Agent(
-            name="OperationalAgent",
-            role="Execute tasks based on the provided prompt",
-            function=prompt,
-            output_model=OperationalAgentOutput,
-            disable_logging=disable_loging,
-        )
-
     def _get_feedback(
         self,
         oa_response: OperationalAgentOutput,
@@ -387,7 +378,6 @@ class MLU:
 
         Use the above relevant knowledge to inform your response. If no relevant knowledge is provided, rely on your general understanding.
         """
-        self.create_operational_agent(generated_prompt)
         oa_response = self.operational_agent(
             oa_input,
         )
