@@ -60,7 +60,7 @@ def process_item(item, mlu, prompt_key, response_key, mode, analysis_agent, logg
     knowledge_update = reply.get("knowledge_update", "No knowledge added")
     print("\nLearned Knowledge Update:")
     pprint.pprint(knowledge_update)
-
+    display_output = None
     dtw_score = None
     if logging:
         try:
@@ -70,6 +70,7 @@ def process_item(item, mlu, prompt_key, response_key, mode, analysis_agent, logg
         except:
             print("Response is not parsable")
             res = actual_array = np.zeros((1, 1))
+            display_output = response["response"]
         try:
             res_diff = res - np.array(actual_array)
             title = "Difference"
@@ -96,7 +97,10 @@ def process_item(item, mlu, prompt_key, response_key, mode, analysis_agent, logg
 
         plt.tight_layout()
         plt.show()
-
+    if (
+        display_output
+    ):  # print the actual output if its not parsable into matrix, usually contains prefex like "This is a matrix.." should be taken care in next architecture
+        pprint(display_output)
     return response["right_answer"], dtw_score
 
 
