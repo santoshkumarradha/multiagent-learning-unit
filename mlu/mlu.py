@@ -80,22 +80,25 @@ class MLU:
         self.operational_agent = None
         self.pruning_queue = []
         self.training_iterations = 0
+        self.custom_analysis_agent = None
 
         # Initialize agents
         self.initialize_agents()
-        self.create_operational_agent = self.default_create_operational_agent
 
     def set_analysis_agent(self, custom_analysis_agent):
-        self.create_operational_agent = custom_analysis_agent
+        self.custom_analysis_agent = custom_analysis_agent
 
-    def default_create_operational_agent(self, prompt):
-        self.operational_agent = Agent(
-            name="OperationalAgent",
-            role="Execute tasks based on the provided prompt",
-            function=prompt,
-            output_model=OperationalAgentOutput,
-            disable_logging=disable_loging,
-        )
+    def create_operational_agent(self, prompt):
+        if self.custom_analysis_agent == None:
+            self.operational_agent = Agent(
+                name="OperationalAgent",
+                role="Execute tasks based on the provided prompt",
+                function=prompt,
+                output_model=OperationalAgentOutput,
+                disable_logging=disable_loging,
+            )
+        else:
+            self.operational_agent = self.custom_analysis_agent
 
     def initialize_agents(self):
         class PromptGenerationOutput(BaseModel):
