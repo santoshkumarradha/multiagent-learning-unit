@@ -387,6 +387,7 @@ class MLU:
 
         Use the above relevant knowledge to inform your response. If no relevant knowledge is provided, rely on your general understanding.
         """
+        self.create_operational_agent(generated_prompt)
         oa_response = self.operational_agent(
             oa_input,
         )
