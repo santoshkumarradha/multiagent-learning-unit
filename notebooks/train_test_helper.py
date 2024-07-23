@@ -58,9 +58,13 @@ def process_item(item, mlu, prompt_key, response_key, mode, analysis_agent, logg
 
     dtw_score = None
     if logging:
-        res_str = response["response"].split(":")[-1]
-        res = np.array(eval(res_str))
-        actual_array = eval(truth)
+        try:
+            res_str = response["response"].split(":")[-1]
+            res = np.array(eval(res_str))
+            actual_array = eval(truth)
+        except:
+            print("Response is not parsable")
+            res = actual_array = np.zeros((1, 1))
         try:
             res_diff = res - np.array(actual_array)
             title = "Difference"
