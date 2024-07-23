@@ -1,4 +1,5 @@
 import concurrent.futures
+import pprint
 import random
 from typing import Callable, Dict, List, Optional
 
@@ -55,6 +56,10 @@ def process_item(item, mlu, prompt_key, response_key, mode, analysis_agent, logg
         "right_answer": reply["right_answer"],
         "knowledge_base": reply.get("knowledge_update", "No knowledge added"),
     }
+    # Pretty-print the knowledge update
+    knowledge_update = reply.get("knowledge_update", "No knowledge added")
+    print("\nLearned Knowledge Update:")
+    pprint.pprint(knowledge_update)
 
     dtw_score = None
     if logging:
