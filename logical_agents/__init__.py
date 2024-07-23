@@ -1,1 +1,2 @@
 from .logic_concept import logic_concept_reasoning_network
+from .logic_pattern import pattern_based_logical_reasoning_network

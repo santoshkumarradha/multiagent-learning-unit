@@ -22,17 +22,19 @@ class LogicalRule(BaseModel):
 
 
 class Solution(BaseModel):
-    content: str = Field(..., description="Proposed solution")
+    Answer: str = Field(
+        ..., description="Final answer. Give only the concise answer and nothing else"
+    )
     explanation: str = Field(
-        ..., description="Explanation of how the solution was derived"
+        ..., description="Explanation of how the answer was derived"
     )
 
 
 class ValidationResult(BaseModel):
     is_consistent: bool = Field(
-        ..., description="Whether the solution is consistent with patterns and rules"
+        ..., description="Whether the answer is consistent with patterns and rules"
     )
-    feedback: str = Field(..., description="Feedback on the solution's consistency")
+    feedback: str = Field(..., description="Feedback on the answer's consistency")
 
 
 class Conversation(BaseModel):
@@ -60,67 +62,73 @@ class Answer(BaseModel):
 
 pattern_extractor = Agent(
     name="PatternExtractor",
-    role="Extract patterns from examples",
+    role="Extract detailed patterns from examples",
     function="""
-    Analyze the given prompt, focusing on the examples provided. Identify recurring patterns in the examples.
-    For each pattern:
-    1. Provide a clear description of the pattern.
-    2. List the examples that illustrate this pattern.
-    Ensure that you capture both obvious and subtle patterns that might be relevant to solving the problem.
+    Analyze the given prompt and examples to identify recurring patterns. For each pattern:
+    1. Provide a detailed description of the pattern, including any contextual factors.
+    2. List and explain the examples that illustrate this pattern.
+    3. Capture both simple and complex patterns, including any subtle variations.
+    4. Ensure that patterns are well-documented and illustrated with examples.
     """,
     output_model=List[Pattern],
 )
 
+
 transformation_analyzer = Agent(
     name="TransformationAnalyzer",
-    role="Analyze transformations between patterns",
+    role="Analyze and document transformations between patterns",
     function="""
-    Based on the identified patterns, analyze how inputs are transformed into outputs in the examples.
-    For each transformation:
-    1. Describe the input pattern.
-    2. Describe the output pattern.
-    3. Formulate a rule that explains how the input is transformed into the output.
-    Focus on generalizable transformation rules that could be applied to new inputs.
+    Examine identified patterns to understand how inputs are transformed into outputs. For each transformation:
+    1. Describe the input pattern in detail.
+    2. Describe the output pattern in detail.
+    3. Formulate precise transformation rules that explain the relationship between input and output.
+    4. Document edge cases, exceptions, and variability in transformations.
+    5. Ensure rules are generalizable and applicable to various scenarios.
     """,
     output_model=List[Transformation],
 )
 
+
 logical_inference_engine = Agent(
     name="LogicalInferenceEngine",
-    role="Infer logical rules from patterns and transformations",
+    role="Infer robust logical rules from patterns and transformations",
     function="""
-    Using the identified patterns and transformations, infer logical rules that govern the problem-solving process.
-    For each logical rule:
-    1. State the premise (condition or scenario).
-    2. State the conclusion (what can be inferred or deduced).
-    Ensure that these logical rules are consistent with the examples and can be applied to solve new problems.
+    Use identified patterns and transformations to infer logical rules that govern the problem-solving process. For each logical rule:
+    1. State the premise clearly, including any conditions or scenarios.
+    2. State the conclusion logically and concisely.
+    3. Ensure the rule is consistent with the examples provided.
+    4. Formulate rules that capture both straightforward and complex logical relationships.
+    5. Validate rules through hypothetical scenarios to ensure applicability.
     """,
     output_model=List[LogicalRule],
 )
 
+
 solution_synthesizer = Agent(
     name="SolutionSynthesizer",
-    role="Synthesize a solution based on patterns, transformations, and logical rules",
+    role="Synthesize comprehensive solutions using patterns, transformations, and logical rules",
     function="""
-    Using the patterns, transformations, and logical rules derived from the examples:
-    1. Propose a solution to the problem presented in the prompt.
-    2. Provide a detailed explanation of how you applied the patterns, transformations, and logical rules to arrive at this solution.
-    3. Ensure that your solution is consistent with the examples provided in the prompt.
+    Integrate identified patterns, transformations, and logical rules to propose a solution. For the solution:
+    1. Clearly state the proposed answer.
+    2. Provide a detailed explanation of how the solution was derived using the identified patterns, transformations, and logical rules.
+    3. Ensure the solution is consistent with the examples and hypothetical scenarios.
+    4. Validate the solution against both provided examples and hypothetical scenarios to ensure robustness in your mind.
     """,
     output_model=Solution,
 )
 
+
 consistency_validator = Agent(
     name="ConsistencyValidator",
-    role="Validate the consistency of the proposed solution",
+    role="Validate the solution's consistency with patterns, transformations, and logical rules",
     function="""
-    Examine the proposed solution in the context of the original prompt, identified patterns, transformations, and logical rules. Your task is to:
-    1. Determine whether the solution is consistent with the patterns observed in the examples.
+    Examine the proposed solution in context of the original prompt, identified patterns, transformations, and logical rules. Your task is to:
+    1. Determine whether the solution is consistent with the identified patterns.
     2. Verify that the solution correctly applies the identified transformations.
     3. Check if the solution adheres to the inferred logical rules.
     4. Provide a clear verdict on the consistency of the solution (True/False).
-    5. Give detailed feedback, including any inconsistencies found or strengths identified.
-    6. If the solution is inconsistent, suggest areas for improvement in the next iteration.
+    5. Offer detailed feedback, highlighting any inconsistencies and suggesting areas for improvement.
+    6. Suggest potential improvements or alternative approaches for inconsistent solutions.
     """,
     output_model=ValidationResult,
 )
@@ -168,6 +176,4 @@ def pattern_based_logical_reasoning_network(
         if validation_result.is_consistent:
             break
 
-    return Answer(
-        response=conversation.current_solution.content, reasoning=conversation
-    )
+    return Answer(response=conversation.current_solution.Answer, reasoning=conversation)

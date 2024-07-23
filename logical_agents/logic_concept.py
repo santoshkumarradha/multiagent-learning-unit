@@ -28,7 +28,7 @@ class ReasoningStep(BaseModel):
 
 
 class Solution(BaseModel):
-    answer: str = Field(..., description="The proposed answer to the problem")
+    answer: str = Field(..., description="Final answer. Give only the concise answer and nothing else")
     justification: str = Field(..., description="Justification for the proposed answer")
 
 
