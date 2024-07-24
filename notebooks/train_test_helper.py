@@ -1,6 +1,6 @@
 import concurrent.futures
+import pprint
 import random
-from pprint import pprint
 from typing import Callable, Dict, List, Optional
 
 import matplotlib.pyplot as plt
@@ -100,7 +100,7 @@ def process_item(item, mlu, prompt_key, response_key, mode, analysis_agent, logg
     if (
         display_output
     ):  # print the actual output if its not parsable into matrix, usually contains prefex like "This is a matrix.." should be taken care in next architecture
-        pprint(display_output)
+        pprint.pprint(display_output)
     return response["right_answer"], dtw_score
 
 
