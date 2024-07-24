@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict
+from typing import Any, Dict, Type
+
+from pydantic import BaseModel
 
 
 class BaseLLM(ABC):
@@ -11,5 +13,7 @@ class BaseLLM(ABC):
         self.max_tokens = max_tokens
 
     @abstractmethod
-    def generate(self, prompt: str, schema: Dict[str, Any]) -> str:
+    def generate(
+        self, system_prompt: str, context: str, task: str, schema: Type[BaseModel]
+    ) -> str:
         pass

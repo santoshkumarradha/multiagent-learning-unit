@@ -43,14 +43,15 @@ class Agent(BaseAgent):
 
         self.status = AgentStatus.RUNNING
         start_time = datetime.now().isoformat()
-        prompt = self._create_prompt(task, context)
+        system_prompt = self._create_system_prompt()
+        context_str = context.get_context_string()
 
         attempts = 0
         max_attempts = self.max_retries
         while attempts < max_attempts:
             attempts += 1
             try:
-                result = self._execute_task(prompt)
+                result = self._execute_task(system_prompt, context_str, task)
                 if inspect.isclass(self.output_model) and issubclass(
                     self.output_model, BaseModel
                 ):
@@ -95,5 +96,10 @@ class Agent(BaseAgent):
                     self.status = AgentStatus.FAILED
                     raise e
 
-    def _execute_task(self, prompt: str) -> Any:
-        return self.llm.generate(prompt=prompt, schema=self.output_model)
+    def _execute_task(self, system_prompt: str, context: str, task: str) -> Any:
+        return self.llm.generate(
+            system_prompt=system_prompt,
+            context=context,
+            task=task,
+            schema=self.output_model,
+        )

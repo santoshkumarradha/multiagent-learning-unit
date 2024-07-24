@@ -35,12 +35,10 @@ class BaseAgent:
         if inspect.isclass(output_model) and issubclass(output_model, BaseModel):
             self.output_model = output_model
         else:
-            # Generate a unique model name
             model_name = f"DynamicOutputModel_{uuid.uuid4().hex[:8]}"
-            # Dynamically create a Pydantic model
             self.output_model = create_model(
                 model_name,
-                output=(output_model, ...),  # Use "output" as the field name
+                output=(output_model, ...),
             )
 
         self.status = AgentStatus.PENDING
@@ -50,15 +48,13 @@ class BaseAgent:
             context = GlobalContext()
         raise NotImplementedError("Subclasses should implement this method.")
 
-    def _create_prompt(self, task: str, context: GlobalContext) -> str:
-        system_prompt = f"""You are: {self.name}
+    def _create_system_prompt(self) -> str:
+        return f"""You are: {self.name}
 Your role: {self.role}
 Your function: {self.function}
 Based on your role and function, do the task you are given."""
-        context_str = context.get_context_string()
-        return f"{system_prompt}\n\nContext:\n{context_str}\n\nTask: {task}"
 
-    def _execute_task(self, prompt: str) -> str:
+    def _execute_task(self, system_prompt: str, context: str, task: str) -> str:
         raise NotImplementedError("Subclasses should implement this method.")
 
     def _to_pydantic_model(self, output: Any) -> BaseModel:
@@ -75,4 +71,4 @@ Based on your role and function, do the task you are given."""
             self.original_output_model, BaseModel
         ):
             return pydantic_output
-        return pydantic_output.output  # Use the "output" field name
+        return pydantic_output.output
