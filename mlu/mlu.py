@@ -260,7 +260,8 @@ class MLU:
     
     derive general rules and principles from the feedback and reasoning that can be applied to future tasks.
     
-    you are responsible for adding knowldge in a database that will help us do this the main goal better based on the task, feedback and reasoning.
+    you are responsible for adding knowledge in a database that will help us do this the main goal better based on the task, feedback and reasoning.
+    IMPORTANT: Please add diverse knowledge that is not already there in the context given.
     """,
             output_model=KnowledgeInsightOutput,
             disable_logging=disable_loging,  # To disable sql for multithreading

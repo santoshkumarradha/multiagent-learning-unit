@@ -126,7 +126,8 @@ consistency_validator = Agent(
     1. Determine whether the solution is consistent with the identified patterns.
     2. Verify that the solution correctly applies the identified transformations.
     3. Check if the solution adheres to the inferred logical rules.
-    4. Provide a clear verdict on the consistency of the solution (True/False).
+    4. Provide a clear verdict on the consistency and check to see if the answer is the correct solution (True/False).
+       Do not give True if the answer is not correct.
     5. Offer detailed feedback, highlighting any inconsistencies and suggesting areas for improvement.
     6. Suggest potential improvements or alternative approaches for inconsistent solutions.
     """,

@@ -12,8 +12,8 @@ class OpenAIChatGPT(BaseLLM):
         self,
         api_key: str,
         model: str = "gpt-3.5-turbo",
-        temperature: float = 1.0,
-        top_p: float = 1.0,
+        temperature: float = None,
+        top_p: float = None,
         max_tokens: int = 1500,
     ):
         super().__init__(temperature, top_p, max_tokens)
@@ -34,8 +34,8 @@ class OpenAIChatGPT(BaseLLM):
                 model=self.model,
                 response_model=schema,  # Ensure this is a class type, not an instance
                 messages=messages,
-                temperature=self.temperature,
-                top_p=self.top_p,
+                # temperature=self.temperature,
+                # top_p=self.top_p,
                 max_tokens=self.max_tokens,
             )
 
