@@ -220,6 +220,7 @@ class MLU:
     - Identify gaps in knowledge or reasoning that led to the incorrect answer
     - Suggest specific improvements to the knowledge base or agent's function
     - Provide strategies to avoid similar mistakes in the future
+    - provide negative feedback as to what not to do in future.
     - Provide a performance score and detailed feedback
     Consider the overall goal of the MLU while providing feedback.
      - question and evaluate things you are not sure about, and provide feedback on the reasoning and the response.
@@ -253,6 +254,7 @@ class MLU:
     Your tasks include:
 
     - Analyzing feedback, tasks, responses, and context to understand the main goal.
+    - Provide positive feedback on what worked.
     - Detecting patterns and formulating general rules based on the analysis.
     - Extracting key elements that influence the quality of task answers.
     - Formulating general, reusable knowledge entries that can be applied to future tasks.
