@@ -83,20 +83,23 @@ def process_item(item, mlu, prompt_key, response_key, mode, analysis_agent, logg
             print(f"DTW Score: {dtw_score}")
         except:
             print("DTW not possible")
+        try:
+            fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
 
-        fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
+            ax3.imshow(res_diff, cmap="plasma")
+            ax3.set_title(title)
 
-        ax3.imshow(res_diff, cmap="plasma")
-        ax3.set_title(title)
+            ax2.imshow(res, cmap="plasma")
+            ax2.set_title("Predicted Array")
 
-        ax2.imshow(res, cmap="plasma")
-        ax2.set_title("Predicted Array")
+            ax1.imshow(actual_array, cmap="plasma")
+            ax1.set_title("Actual Array")
 
-        ax1.imshow(actual_array, cmap="plasma")
-        ax1.set_title("Actual Array")
+            plt.tight_layout()
+            plt.show()
+        except:
+            print("Cannot plot the image")
 
-        plt.tight_layout()
-        plt.show()
     if (
         display_output
     ):  # print the actual output if its not parsable into matrix, usually contains prefex like "This is a matrix.." should be taken care in next architecture

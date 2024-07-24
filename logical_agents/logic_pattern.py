@@ -130,6 +130,7 @@ consistency_validator = Agent(
        Do not give True if the answer is not correct.
     5. Offer detailed feedback, highlighting any inconsistencies and suggesting areas for improvement.
     6. Suggest potential improvements or alternative approaches for inconsistent solutions.
+    Important: Do not give True if you think the answer is not correct
     """,
     output_model=ValidationResult,
 )
