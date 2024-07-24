@@ -32,7 +32,8 @@ class Solution(BaseModel):
 
 class ValidationResult(BaseModel):
     is_consistent: bool = Field(
-        ..., description="Whether the answer is consistent with patterns and rules"
+        ...,
+        description="Whether the answer is consistent with patterns and rules. AND is the answer correct?",
     )
     feedback: str = Field(..., description="Feedback on the answer's consistency")
 

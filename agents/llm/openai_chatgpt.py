@@ -39,8 +39,8 @@ class OpenAIChatGPT(BaseLLM):
                 max_tokens=self.max_tokens,
             )
 
-            # Instructor returns the parsed object, so we need to convert it back to JSON
-            return response.model_dump_json()
+            # Return the raw text of the response, even if it might be incomplete
+            return response["choices"][0]["message"]["content"]
 
         except Exception as e:
             # Handle any API errors or other exceptions

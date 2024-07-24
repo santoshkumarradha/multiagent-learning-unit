@@ -181,7 +181,8 @@ class MLU:
     - ask about knowledge gaps and provide feedback on the reasoning and the response or lack of such knowledge.
     Consider the overall goal of the MLU while providing feedback.
     If no expected output is provided, evaluate the response based on its relevance and quality for the given task and overall goal.
-    check if the reasoning and the reply makes sense given the main goal of what we are trying to achieve.""",
+    check if the reasoning and the reply makes sense given the main goal of what we are trying to achieve.
+    Important: Prefer giving detailed and comprehensive yet not verbose feedback that is not already there in the knowledge, but will help and is correct.""",
             output_model=FeedbackOutput,
             disable_logging=disable_loging,  # To disable sql for multithreading
         )
@@ -204,6 +205,7 @@ class MLU:
     
     Make sure to compare the output to that of expected output, if it is the same give reasons as to what made the main agent reply this way and extract insights, if its wrong, extract and explain what caused it wrong warning signs and how to avoid it in future to make sure we use this for future new tasks.
     Do not give positive feedback for wrong expected output, make sure to give feedback on what went wrong and how to avoid it in future.
+    Important: Prefer giving detailed and comprehensive yet not verbose feedback that is not already there in the knowledge, but will help and is correct.
     """,
             output_model=FeedbackOutput,
             disable_logging=disable_loging,  # To disable sql for multithreading
@@ -227,6 +229,7 @@ class MLU:
     
     Make sure to compare the output to that of expected output, if it is the same give reasons as to what made the main agent reply this way and extract insights, if its wrong, extract and explain what caused it wrong warning signs and how to avoid it in future to make sure we use this for future new tasks.
     Do not give positive feedback for wrong expected output, make sure to give feedback on what went wrong and how to avoid it in future.
+    Important: Prefer giving detailed and comprehensive yet not verbose feedback that is not already there in the knowledge, but will help and is correct.
     """,
             output_model=FeedbackOutput,
             disable_logging=disable_loging,  # To disable sql for multithreading
