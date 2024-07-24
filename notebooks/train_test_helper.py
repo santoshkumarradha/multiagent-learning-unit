@@ -1,6 +1,6 @@
 import concurrent.futures
-import pprint
 import random
+from pprint import pprint
 from typing import Callable, Dict, List, Optional
 
 import matplotlib.pyplot as plt
