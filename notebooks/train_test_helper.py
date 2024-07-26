@@ -45,66 +45,69 @@ def dtw_2d_distance(matrix1, matrix2):
 
 
 def process_item(item, mlu, prompt_key, response_key, mode, analysis_agent, logging):
-    if analysis_agent is not None:
-        mlu.set_analysis_agent(analysis_agent)
-    prompt = item[prompt_key]
-    truth = item[response_key]
-    reply = mlu.call(prompt, expected_output=f"{truth}", mode=mode)
+    try:
+        if analysis_agent is not None:
+            mlu.set_analysis_agent(analysis_agent)
+        prompt = item[prompt_key]
+        truth = item[response_key]
+        reply = mlu.call(prompt, expected_output=f"{truth}", mode=mode)
 
-    response = {
-        "response": reply["response"],
-        "right_answer": reply["right_answer"],
-        "knowledge_base": reply.get("knowledge_update", "No knowledge added"),
-    }
-    # Pretty-print the knowledge update
-    knowledge_update = reply.get("knowledge_update", "No knowledge added")
-    print("\nLearned Knowledge Update:")
-    pprint.pprint(knowledge_update)
-    display_output = None
-    dtw_score = None
-    if logging:
-        try:
-            res_str = response["response"].split(":")[-1]
-            res = np.array(eval(res_str))
-            actual_array = eval(truth)
-        except:
-            print("Response is not parsable")
-            res = actual_array = np.zeros((1, 1))
-            display_output = response["response"]
-        try:
-            res_diff = res - np.array(actual_array)
-            title = "Difference"
-        except:
-            res_diff = np.zeros((len(res), len(res[0])))
-            title = "Diff not possible"
+        response = {
+            "response": reply["response"],
+            "right_answer": reply["right_answer"],
+            "knowledge_base": reply.get("knowledge_update", "No knowledge added"),
+        }
+        # Pretty-print the knowledge update
+        knowledge_update = reply.get("knowledge_update", "No knowledge added")
+        print("\nLearned Knowledge Update:")
+        pprint.pprint(knowledge_update)
+        display_output = None
+        dtw_score = None
+        if logging:
+            try:
+                res_str = response["response"].split(":")[-1]
+                res = np.array(eval(res_str))
+                actual_array = eval(truth)
+            except:
+                print("Response is not parsable")
+                res = actual_array = np.zeros((1, 1))
+                display_output = response["response"]
+            try:
+                res_diff = res - np.array(actual_array)
+                title = "Difference"
+            except:
+                res_diff = np.zeros((len(res), len(res[0])))
+                title = "Diff not possible"
 
-        try:
-            dtw_score = dtw_2d_distance(res, actual_array)
-            print(f"DTW Score: {dtw_score}")
-        except:
-            print("DTW not possible")
-        try:
-            fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
+            try:
+                dtw_score = dtw_2d_distance(res, actual_array)
+                print(f"DTW Score: {dtw_score}")
+            except:
+                print("DTW not possible")
+            try:
+                fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
 
-            ax3.imshow(res_diff, cmap="plasma")
-            ax3.set_title(title)
+                ax3.imshow(res_diff, cmap="plasma")
+                ax3.set_title(title)
 
-            ax2.imshow(res, cmap="plasma")
-            ax2.set_title("Predicted Array")
+                ax2.imshow(res, cmap="plasma")
+                ax2.set_title("Predicted Array")
 
-            ax1.imshow(actual_array, cmap="plasma")
-            ax1.set_title("Actual Array")
+                ax1.imshow(actual_array, cmap="plasma")
+                ax1.set_title("Actual Array")
 
-            plt.tight_layout()
-            plt.show()
-        except:
-            print("Cannot plot the image")
+                plt.tight_layout()
+                plt.show()
+            except:
+                print("Cannot plot the image")
 
-    if (
-        display_output
-    ):  # print the actual output if its not parsable into matrix, usually contains prefex like "This is a matrix.." should be taken care in next architecture
-        pprint.pprint(display_output)
-    return response["right_answer"], dtw_score
+        if (
+            display_output
+        ):  # print the actual output if its not parsable into matrix, usually contains prefex like "This is a matrix.." should be taken care in next architecture
+            pprint.pprint(display_output)
+        return response["right_answer"], dtw_score
+    except:
+        return "Current process failed", -1
 
 
 def train_and_evaluate(
