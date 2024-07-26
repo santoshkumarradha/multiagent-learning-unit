@@ -480,7 +480,11 @@ class MLUFocus:
             )
 
             # Update focus based on feedback
-            self.update_focus(task, feedback)
+            focus_task_prompt = (
+                f"\nTask: {task}\nResponse: {oa_response.response}\nReasoning: {oa_response.reasoning}"
+                + f"\nTask: {task}"
+            )
+            self.update_focus(focus_task_prompt, feedback)
 
             # Store prompt feedback
             self.store_prompt_feedback(

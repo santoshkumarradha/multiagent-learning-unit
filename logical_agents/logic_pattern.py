@@ -49,16 +49,38 @@ class Conversation(BaseModel):
     validation_result: Optional[ValidationResult] = None
     iterations: int = Field(0, description="Number of iterations taken")
 
+    def __str__(self):
+        details = (
+            f"Prompt: {self.prompt}\n"
+            f"Patterns: {self.patterns}\n"
+            f"Transformations: {self.transformations}\n"
+            f"Logical Rules: {self.logical_rules}\n"
+            f"Current Solution: {self.current_solution}\n"
+            f"Validation Result: {self.validation_result}\n"
+            f"Iterations: {self.iterations}\n"
+        )
+        return details
+
 
 class Answer(BaseModel):
     response: str
-    reasoning: Conversation
+    reasoning: str
 
     def __getattribute__(self, name: str) -> Any:
         try:
             return super().__getattribute__(name)
         except:
             return ""
+
+
+class ListPattern(BaseModel):
+    patterns: List[Pattern] = Field(..., description="List of patterns")
+
+
+class ListTransformation(BaseModel):
+    transformations: List[Transformation] = Field(
+        ..., description="List of transformations"
+    )
 
 
 pattern_extractor = Agent(
@@ -70,8 +92,10 @@ pattern_extractor = Agent(
     2. List and explain the examples that illustrate this pattern.
     3. Capture both simple and complex patterns, including any subtle variations.
     4. Ensure that patterns are well-documented and illustrated with examples.
+    5. Make sure you reply in a clear without leaving any details but in a concise way.
+    
     """,
-    output_model=List[Pattern],
+    output_model=ListPattern,
 )
 
 
@@ -85,9 +109,14 @@ transformation_analyzer = Agent(
     3. Formulate precise transformation rules that explain the relationship between input and output.
     4. Document edge cases, exceptions, and variability in transformations.
     5. Ensure rules are generalizable and applicable to various scenarios.
+    6. Make sure you reply in a clear without leaving any details but in a concise way.
     """,
-    output_model=List[Transformation],
+    output_model=ListTransformation,
 )
+
+
+class ListLogicalRule(BaseModel):
+    logical_rules: List[LogicalRule] = Field(..., description="List of logical rules")
 
 
 logical_inference_engine = Agent(
@@ -100,8 +129,10 @@ logical_inference_engine = Agent(
     3. Ensure the rule is consistent with the examples provided.
     4. Formulate rules that capture both straightforward and complex logical relationships.
     5. Validate rules through hypothetical scenarios to ensure applicability.
+    6. Make sure you reply in a clear without leaving any details but in a concise way.
+    
     """,
-    output_model=List[LogicalRule],
+    output_model=ListLogicalRule,
 )
 
 
@@ -114,6 +145,8 @@ solution_synthesizer = Agent(
     2. Provide a detailed explanation of how the solution was derived using the identified patterns, transformations, and logical rules.
     3. Ensure the solution is consistent with the examples and hypothetical scenarios.
     4. Validate the solution against both provided examples and hypothetical scenarios to ensure robustness in your mind.
+    5. Make sure you reply in a clear without leaving any details but in a concise way.
+    
     """,
     output_model=Solution,
 )
@@ -131,10 +164,19 @@ consistency_validator = Agent(
        Do not give True if the answer is not correct.
     5. Offer detailed feedback, highlighting any inconsistencies and suggesting areas for improvement.
     6. Suggest potential improvements or alternative approaches for inconsistent solutions.
+    7. Make sure you reply in a clear without leaving any details but in a concise way.
+    
     Important: Do not give True if you think the answer is not correct
     """,
     output_model=ValidationResult,
 )
+
+print_logs = True
+
+
+def print_cond(x):
+    if print_logs:
+        print(x)
 
 
 def pattern_based_logical_reasoning_network(
@@ -147,30 +189,35 @@ def pattern_based_logical_reasoning_network(
         conversation.iterations += 1
 
         # Pattern Extraction
+        print_cond(f"Iteration: {conversation.iterations} - Pattern Extraction")
         patterns = pattern_extractor(
             f"Prompt: {prompt}\nCurrent patterns: {conversation.patterns}"
-        )
+        ).patterns
         conversation.patterns = patterns
 
         # Transformation Analysis
+        print_cond(f"Iteration: {conversation.iterations} - Transformation Analysis")
         transformations = transformation_analyzer(
             f"Prompt: {prompt}\nPatterns: {patterns}\nCurrent transformations: {conversation.transformations}",
-        )
+        ).transformations
         conversation.transformations = transformations
 
         # Logical Inference
+        print_cond(f"Iteration: {conversation.iterations} - Logical Inference")
         logical_rules = logical_inference_engine(
             f"Prompt: {prompt}\nPatterns: {patterns}\nTransformations: {transformations}\nCurrent logical rules: {conversation.logical_rules}",
-        )
+        ).logical_rules
         conversation.logical_rules = logical_rules
 
         # Solution Synthesis
+        print_cond(f"Iteration: {conversation.iterations} - Solution Synthesis")
         solution = solution_synthesizer(
             f"Prompt: {prompt}\nPatterns: {patterns}\nTransformations: {transformations}\nLogical Rules: {logical_rules}",
         )
         conversation.current_solution = solution
 
         # Consistency Validation
+        print_cond(f"Iteration: {conversation.iterations} - Consistency Validation")
         validation_result = consistency_validator(
             f"Prompt: {prompt}\nPatterns: {patterns}\nTransformations: {transformations}\nLogical Rules: {logical_rules}\nProposed Solution: {solution}",
         )
@@ -179,4 +226,13 @@ def pattern_based_logical_reasoning_network(
         if validation_result.is_consistent:
             break
 
-    return Answer(response=conversation.current_solution.Answer, reasoning=conversation)
+    reasoning = (
+        f"Prompt: {conversation.prompt}\n"
+        f"Patterns: {conversation.patterns}\n"
+        f"Transformations: {conversation.transformations}\n"
+        f"Logical Rules: {conversation.logical_rules}\n"
+        f"Current Solution: {conversation.current_solution}\n"
+        f"Validation Result: {conversation.validation_result}\n"
+        f"Iterations: {conversation.iterations}\n"
+    )
+    return Answer(response=conversation.current_solution.Answer, reasoning=reasoning)

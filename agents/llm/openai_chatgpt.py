@@ -11,7 +11,7 @@ class OpenAIChatGPT(BaseLLM):
     def __init__(
         self,
         api_key: str,
-        model: str = "gpt-3.5-turbo",
+        model: str = "gpt-4o-mini",
         temperature: float = None,
         top_p: float = None,
         max_tokens: int = 1500,
