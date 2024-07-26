@@ -88,10 +88,10 @@ pattern_extractor = Agent(
     role="Extract detailed patterns from examples",
     function="""
     Analyze the given prompt and examples to identify recurring patterns. For each pattern:
-    1. Provide a detailed description of the pattern, including any contextual factors.
+    1. Provide a detailed but still in concise description of the pattern, including any contextual factors.
     2. List and explain the examples that illustrate this pattern.
     3. Capture both simple and complex patterns, including any subtle variations.
-    4. Ensure that patterns are well-documented and illustrated with examples.
+    4. Ensure that patterns are well-documented and illustrated with examples in a concise manner.
     5. Make sure you reply in a clear without leaving any details but in a concise way.
     
     """,
@@ -104,8 +104,8 @@ transformation_analyzer = Agent(
     role="Analyze and document transformations between patterns",
     function="""
     Examine identified patterns to understand how inputs are transformed into outputs. For each transformation:
-    1. Describe the input pattern in detail.
-    2. Describe the output pattern in detail.
+    1. Describe the input pattern in detail but still in concise manner needed to understand the transformation.
+    2. Describe the output pattern in detail still in concise manner needed to understand the transformation.
     3. Formulate precise transformation rules that explain the relationship between input and output.
     4. Document edge cases, exceptions, and variability in transformations.
     5. Ensure rules are generalizable and applicable to various scenarios.
@@ -160,9 +160,8 @@ consistency_validator = Agent(
     1. Determine whether the solution is consistent with the identified patterns.
     2. Verify that the solution correctly applies the identified transformations.
     3. Check if the solution adheres to the inferred logical rules.
-    4. Provide a clear verdict on the consistency and check to see if the answer is the correct solution (True/False).
-       Do not give True if the answer is not correct.
-    5. Offer detailed feedback, highlighting any inconsistencies and suggesting areas for improvement.
+    4. Provide a clear verdict on the consistency and check to see if the answer is the correct solution (True/False). Note: Do not give True if the answer is not correct.
+    5. Offer detailed yet concise feedback, highlighting any inconsistencies and suggesting areas for improvement.
     6. Suggest potential improvements or alternative approaches for inconsistent solutions.
     7. Make sure you reply in a clear without leaving any details but in a concise way.
     
