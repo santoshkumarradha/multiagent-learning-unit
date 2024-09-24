@@ -1,27 +1,59 @@
 import asyncio
+import logging
+import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
 from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field
+from rich import box
 from rich.console import Console
+from rich.logging import RichHandler
+from rich.panel import Panel
+from rich.progress import Progress
+from rich.table import Table
+from rich.text import Text
+
+# Setup rich logging
+console = Console()
+# logging.basicConfig(level="NOTSET", format="%(message)s", handlers=[RichHandler()])
+# log = logging.getLogger("rich")
 
 from ...agent_class import Agent
 from ...llm import LLMBase
 from .kmu import KnowledgeManagementUnit
 
 verbosity = True
-disable_loging = True
-
-
-def print_cond(text, verbose=verbosity):
-    if verbose:
-        print(text)
 
 
 def generate_short_uuid(length=8):
     short_uuid = str(uuid.uuid4()).replace("-", "")[:length]
     return short_uuid
+
+
+def print_cond_rich(panel_text, title=None, subtitle=None, style="blue"):
+    if verbosity:
+        panel = Panel(
+            panel_text,
+            title=title,
+            subtitle=subtitle,
+            border_style=style,
+            padding=(1, 2),
+        )
+        console.print(panel)
+
+
+def format_result_table(results: dict, title: str = "Results", style: str = "green"):
+    """Helper function to create and print a rich table for results"""
+    table = Table(title=title, box=box.ROUNDED, border_style=style)
+    table.add_column("Field", justify="right", style="cyan", no_wrap=True)
+    table.add_column("Value", style="magenta")
+
+    for key, value in results.items():
+        table.add_row(key, str(value))
+
+    console.print(table)
 
 
 class FeedbackOutput(BaseModel):
@@ -135,6 +167,10 @@ class CLU:
         self.custom_analysis_agent = custom_analysis_agent
 
     async def create_operational_agent(self, prompt):
+        print_cond_rich(
+            f"Creating Operational Agent with the prompt:\n{prompt}",
+            title="Agent Creation",
+        )
         if self.custom_analysis_agent is None:
             self.operational_agent = Agent(
                 name="OperationalAgent",
@@ -328,14 +364,12 @@ class CLU:
         )
 
     async def prune_knowledge_bases(self):
-        print_cond("Pruning knowledge bases...")
         for entry in self.pruning_queue:
             if entry["prompt_ids"]:
                 await self.prompt_kmu.prune(entry["feedback"], entry["prompt_ids"])
             if entry["general_ids"]:
                 await self.general_kmu.prune(entry["feedback"], entry["general_ids"])
         self.pruning_queue = []
-        print_cond("Pruning complete.")
 
     def inference(self, task: str):
         """
@@ -366,7 +400,14 @@ class CLU:
         return self._executor.submit(run_async_in_new_loop).result()
 
     async def inference_async(self, task: str):
-        # Retrieve relevant prompt knowledge
+        start_time = time.time()
+
+        # Step 1: Retrieve prompt knowledge
+        print_cond_rich(
+            f"Retrieving relevant prompt knowledge for task: [italic]{task}[/italic]",
+            title="Knowledge Retrieval 📚",
+            style="cyan",
+        )
         prompt_knowledge = await self.prompt_kmu.retrieve_knowledge(
             task, n_results=self.retrieval_limit
         )
@@ -378,7 +419,12 @@ class CLU:
             else "No relevant prompt knowledge found."
         )
 
-        # Generate prompt using Meta-Prompt Agent
+        # Step 2: Generate prompt using Meta-Prompt Agent
+        print_cond_rich(
+            f"Generating prompt for task: [italic]{task}[/italic] using MetaPromptAgent",
+            title="Prompt Generation 📝",
+            style="magenta",
+        )
         prompt_input = f"Main Goal: {self.main_role}\nTask: {task}\nRelevant Prompt Knowledge: {prompt_knowledge_str}"
         system_prompt, user_prompt = self.meta_prompt_agent.prompt(prompt_input)
         formatted_prompt = self.llm.format_prompt(system_prompt, user_prompt)
@@ -386,10 +432,15 @@ class CLU:
             formatted_prompt, PromptGenerationOutput
         )
 
-        # Create or update Operational Agent with the generated prompt
+        # Step 3: Create operational agent
         await self.create_operational_agent(generated_prompt.prompt)
 
-        # Retrieve relevant general knowledge
+        # Step 4: Retrieve general knowledge
+        print_cond_rich(
+            f"Retrieving general knowledge for task: [italic]{task}[/italic]",
+            title="General Knowledge Retrieval 📖",
+            style="cyan",
+        )
         general_knowledge_input = f"Main Goal: {self.main_role}\nTask: {task}\nTask Solving Prompt: {generated_prompt.prompt}"
         general_knowledge = await self.general_kmu.retrieve_knowledge(
             general_knowledge_input, n_results=self.retrieval_limit
@@ -402,12 +453,39 @@ class CLU:
             else "No relevant general knowledge found."
         )
 
-        # Execute task with relevant general knowledge
+        # Step 5: Execute operational agent with retrieved knowledge
+        print_cond_rich(
+            f"Executing Operational Agent for task: [italic]{task}[/italic] with the following knowledge:\n[dim]{general_knowledge_str}[/dim]",
+            title="Agent Execution ⚙️",
+            style="bold blue",
+        )
         oa_input = f"Task: {task}\nRelevant Knowledge: {general_knowledge_str}"
         system_prompt, user_prompt = self.operational_agent.prompt(oa_input)
         formatted_prompt = self.llm.format_prompt(system_prompt, user_prompt)
         oa_response = await self.llm.generate_async(
             formatted_prompt, OperationalAgentOutput
+        )
+
+        # Step 6: Show results
+        end_time = time.time()
+        execution_time = end_time - start_time
+
+        print_cond_rich(
+            f"Inference Completed for task: [italic]{task}[/italic] in [bold]{execution_time:.2f}[/bold] seconds",
+            title="Inference Complete 🎉",
+            style="green",
+        )
+
+        # Displaying inference output
+        format_result_table(
+            {
+                "Response": oa_response.response,
+                "Reasoning": oa_response.reasoning,
+                "Confidence": oa_response.confidence,
+                "Knowledge Used": general_knowledge_str,
+            },
+            title="Inference Result",
+            style="green",
         )
 
         return InferenceOutput(
@@ -417,10 +495,23 @@ class CLU:
     async def training_async(
         self, task: str, expected_output: Optional[str] = None, prune_after=1
     ) -> TrainingOutput:
-        # Run inference first
+        start_time = time.time()
+
+        print_cond_rich(
+            f"Starting [bold]Training[/bold] for task: [italic]{task}[/italic]",
+            title="Training Start 🎯",
+            style="yellow",
+        )
+
+        # Step 1: Run inference first
         inference_result = await self.inference_async(task)
 
-        # Perform feedback generation and knowledge saving if in training mode
+        # Step 2: Generate feedback
+        print_cond_rich(
+            f"Generating feedback for task: [italic]{task}[/italic]",
+            title="Feedback Generation 📝",
+            style="magenta",
+        )
         feedback, right_answer = await self._get_feedback(
             oa_response=inference_result.operational_agent_response,
             expected_output=expected_output,
@@ -428,7 +519,12 @@ class CLU:
             task=task,
         )
 
-        # Store prompt feedback
+        # Step 3: Store feedback and knowledge updates
+        print_cond_rich(
+            "Storing prompt feedback and updating knowledge entries...",
+            title="Knowledge Management 💾",
+            style="cyan",
+        )
         await self.store_prompt_feedback(
             inference_result.operational_agent_response.response,
             task,
@@ -436,7 +532,7 @@ class CLU:
             feedback.feedback,
         )
 
-        # Save knowledge updates
+        # Step 4: Knowledge update and prune
         system_prompt, user_prompt = self.knowledge_insight_agent.prompt(
             f"Overall Goal: {self.main_role}\nAnalyze feedback: {feedback}\nTask: {task}\nResponse: {inference_result.operational_agent_response.response}\nReasoning: {inference_result.operational_agent_response.reasoning}"
         )
@@ -452,11 +548,35 @@ class CLU:
             ]
             await asyncio.gather(*tasks)
 
-        # Pruning logic
         if len(self.pruning_queue) >= self.pruning_queue_size:
+            print_cond_rich(
+                "Pruning knowledge base...",
+                title="Pruning Knowledge 🌳",
+                style="bold cyan",
+            )
             await self.prune_knowledge_bases()
 
-        # Return the packed result in a custom TrainingOutput object
+        # Show results
+        end_time = time.time()
+        execution_time = end_time - start_time
+
+        print_cond_rich(
+            f"Training Completed for task: [italic]{task}[/italic] in [bold]{execution_time:.2f}[/bold] seconds",
+            title="Training Complete 🏁",
+            style="green",
+        )
+
+        # Display training output neatly
+        format_result_table(
+            {
+                "Feedback": feedback.feedback,
+                "Right Answer": right_answer,
+                "New Knowledge": knowledge_update.new_knowledge,
+            },
+            title="Training Result",
+            style="green",
+        )
+
         return TrainingOutput(
             inference_output=inference_result,
             feedback=feedback,
@@ -537,7 +657,6 @@ class CLU:
             formatted_prompt, PromptGenerationOutput
         )
 
-        print_cond(f"Generated Prompt: {generated_prompt}")
         # Create or update Operational Agent with the generated prompt
         await self.create_operational_agent(generated_prompt.prompt)
 
@@ -600,7 +719,6 @@ class CLU:
             if knowledge_update.new_knowledge:
                 tasks = []  # List to store all the async tasks
                 for knowledge in knowledge_update.new_knowledge:
-                    print_cond(f"Saving Knowledge")
                     # Append each save_knowledge task to the list
                     tasks.append(self.general_kmu.save_knowledge(knowledge))
 
@@ -608,7 +726,6 @@ class CLU:
                 await asyncio.gather(*tasks)
 
                 # Print message after all tasks are complete
-                print_cond(f"All Knowledge Saved")
 
             # Flatten and check IDs
             prompt_ids = prompt_knowledge.get("ids", [])
