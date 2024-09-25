@@ -4,7 +4,7 @@ import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional, Type
 
 from pydantic import BaseModel, Field
 from rich import box
@@ -380,7 +380,7 @@ class CLU:
                 await self.general_kmu.prune(entry["feedback"], entry["general_ids"])
         self.pruning_queue = []
 
-    def inference(self, task: str):
+    def inference(self, task: str, output_schema: Optional[Type] = str):
         """
         Synchronous wrapper for inference_async method.
         Can be called from Jupyter notebooks or any synchronous context.
@@ -389,7 +389,9 @@ class CLU:
         def run_async_in_new_loop():
             new_loop = asyncio.new_event_loop()
             asyncio.set_event_loop(new_loop)
-            return new_loop.run_until_complete(self.inference_async(task))
+            return new_loop.run_until_complete(
+                self.inference_async(task, output_schema)
+            )
 
         return self._executor.submit(run_async_in_new_loop).result()
 
@@ -408,7 +410,7 @@ class CLU:
 
         return self._executor.submit(run_async_in_new_loop).result()
 
-    async def inference_async(self, task: str):
+    async def inference_async(self, task: str, output_schema: Optional[Type] = str):
         start_time = time.time()
 
         # Step 1: Retrieve prompt knowledge
@@ -471,11 +473,16 @@ class CLU:
         oa_input = f"Task: {task}\nRelevant Knowledge: {general_knowledge_str}"
         system_prompt, user_prompt = self.operational_agent.prompt(oa_input)
         formatted_prompt = self.llm.format_prompt(system_prompt, user_prompt)
+
+        # Dynamically get the OperationalAgentOutput schema based on output_schema
+        OperationalAgentOutput = self.get_operational_agent_schema(output_schema)
         oa_response = await self.llm.generate_async(
             formatted_prompt, OperationalAgentOutput
         )
 
-        # Step 6: Show results
+        # Dynamically get InferenceOutput schema based on OperationalAgentOutput
+        InferenceOutput = self.get_inference_output_schema(OperationalAgentOutput)
+
         end_time = time.time()
         execution_time = end_time - start_time
 
@@ -502,8 +509,12 @@ class CLU:
         )
 
     async def training_async(
-        self, task: str, expected_output: Optional[str] = None, prune_after=1
-    ) -> TrainingOutput:
+        self,
+        task: str,
+        expected_output: Optional[str] = None,
+        prune_after=1,
+        output_schema: Optional[Type] = str,
+    ):
         start_time = time.time()
 
         print_cond_rich(
@@ -513,7 +524,7 @@ class CLU:
         )
 
         # Step 1: Run inference first
-        inference_result = await self.inference_async(task)
+        inference_result = await self.inference_async(task, output_schema=output_schema)
 
         # Step 2: Generate feedback
         print_cond_rich(
@@ -565,7 +576,6 @@ class CLU:
             )
             await self.prune_knowledge_bases()
 
-        # Show results
         end_time = time.time()
         execution_time = end_time - start_time
 
@@ -575,16 +585,8 @@ class CLU:
             style="green",
         )
 
-        # Display training output neatly
-        format_result_table(
-            {
-                "Feedback": feedback.feedback,
-                "Right Answer": right_answer,
-                "New Knowledge": knowledge_update.new_knowledge,
-            },
-            title="Training Result",
-            style="green",
-        )
+        # Dynamically get TrainingOutput schema based on InferenceOutput
+        TrainingOutput = self.get_training_output_schema(type(inference_result))
 
         return TrainingOutput(
             inference_output=inference_result,
@@ -614,6 +616,64 @@ class CLU:
         else:
             for idx, doc in enumerate(prompt_entries["documents"]):
                 console.print(f"Entry {idx + 1}: {doc}")
+
+    def get_operational_agent_schema(self, output_schema: Optional[Type] = str):
+        """
+        Dynamically creates OperationalAgentOutput with the response field's type
+        depending on the output_schema provided.
+        """
+
+        class DynamicOperationalAgentOutput(BaseModel):
+            reasoning: str = Field(
+                ..., description="Detailed reasoning behind the response"
+            )
+            response: output_schema = Field(
+                ..., description="Response from the Operational Agent"
+            )
+            confidence: float = Field(
+                ..., description="Confidence in the response between 0 and 1"
+            )
+
+        return DynamicOperationalAgentOutput
+
+    def get_inference_output_schema(
+        self, operational_agent_output_schema: Type[BaseModel]
+    ):
+        """
+        Dynamically creates InferenceOutput based on the operational_agent_output_schema.
+        """
+
+        class DynamicInferenceOutput(BaseModel):
+            operational_agent_response: operational_agent_output_schema = Field(
+                ..., description="Operational Agent response"
+            )
+            knowledge_used: str = Field(
+                ..., description="Knowledge used by the Operational Agent"
+            )
+
+        return DynamicInferenceOutput
+
+    def get_training_output_schema(self, inference_output_schema: Type[BaseModel]):
+        """
+        Dynamically creates TrainingOutput based on the inference_output_schema.
+        """
+
+        class DynamicTrainingOutput(BaseModel):
+            inference_output: inference_output_schema = Field(
+                ..., description="The result of the inference step."
+            )
+            feedback: FeedbackOutput = Field(
+                ..., description="The feedback provided during training."
+            )
+            knowledge_update: List[str] = Field(
+                ..., description="The updated knowledge entries."
+            )
+            right_answer: Optional[bool] = Field(
+                None,
+                description="Whether the Operational Agent's response was correct.",
+            )
+
+        return DynamicTrainingOutput
 
     # ------------Old Methods----------------
 
