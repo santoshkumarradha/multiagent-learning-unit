@@ -127,24 +127,19 @@ class KnowledgeManagementUnit:
         )
 
     async def save_knowledge(self, content: str) -> str:
-        import time
 
-        start = time.time()
         system_prompt, user_prompt = self.knowledge_processor.prompt(
             f"Content: {content}"
         )
         formatted_prompt = self.llm.format_prompt(system_prompt, user_prompt)
         processed = await self.llm.generate_async(formatted_prompt, ProcessedKnowledge)
-        print("Time taken to process knowledge: ", time.time() - start)
 
-        start = time.time()
         entry_id = str(uuid.uuid4())
         self.collection.add(
             documents=[processed.content + "\ntags: " + ",".join(processed.tags)],
             ids=[entry_id],
             metadatas=[{"tags": ",".join(processed.tags)}],
         )
-        print("Time taken to save knowledge: ", time.time() - start)
         return entry_id
 
     async def retrieve_knowledge(

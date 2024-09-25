@@ -24,7 +24,13 @@ from ...agent_class import Agent
 from ...llm import LLMBase
 from .kmu import KnowledgeManagementUnit
 
-verbosity = True
+
+def set_verbose(verbose: bool = False):
+    global verbosity
+    verbosity = verbose
+
+
+set_verbose(False)
 
 
 def generate_short_uuid(length=8):
@@ -307,7 +313,10 @@ class CLU:
             derive general rules and principles from the feedback and reasoning that can be applied to future tasks.
             
             you are responsible for adding knowledge in a database that will help us do this the main goal better based on the task, feedback and reasoning.
-            IMPORTANT: Please add diverse knowledge that is not already there in the context given.
+            IMPORTANT: 
+            1.Please add diverse knowledge that is not already there in the context given.
+            **2.Make sure you extract and add knowledge that is aligned and geared towards achieving the overall goal.**
+            3. do not memorize and store exact input-output pairs but rather the reasoning and the knowledge that can be used to solve the task.
             """,
         )
 
