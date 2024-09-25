@@ -61,8 +61,8 @@ class OpenAILLM(LLMBase):
             result = completion.choices[0].message.content
             return schema.model_validate_json(result)
         except Exception as e:
+            raise Exception(f"Error in OpenAI async generation: {e}")
             print(f"Error in OpenAI async generation: {e}")
-            return None
 
     def format_prompt(
         self, system_prompt: str, user_prompt: str
