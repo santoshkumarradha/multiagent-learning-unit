@@ -52,14 +52,15 @@ def print_cond_rich(panel_text, title=None, subtitle=None, style="blue"):
 
 def format_result_table(results: dict, title: str = "Results", style: str = "green"):
     """Helper function to create and print a rich table for results"""
-    table = Table(title=title, box=box.ROUNDED, border_style=style)
-    table.add_column("Field", justify="right", style="cyan", no_wrap=True)
-    table.add_column("Value", style="magenta")
+    if verbosity:
+        table = Table(title=title, box=box.ROUNDED, border_style=style)
+        table.add_column("Field", justify="right", style="cyan", no_wrap=True)
+        table.add_column("Value", style="magenta")
 
-    for key, value in results.items():
-        table.add_row(key, str(value))
+        for key, value in results.items():
+            table.add_row(key, str(value))
 
-    console.print(table)
+        console.print(table)
 
 
 class FeedbackOutput(BaseModel):
