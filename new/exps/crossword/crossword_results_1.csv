@@ -10,7 +10,7 @@ v2. A greeting
 v3. The Islamic name for Satan
 v4. To sift
 v5. One who eats
-","[['P', 'I', 'C', 'K', ' '], ['P', 'E', 'N', 'N', 'Y'], ['T', 'A', 'W', 'N', 'Y'], ['S', 'N', 'E', 'A', 'K'], ['M', 'A', 'N', ' ', ' ']]","[['C', 'H', 'E', 'S', 'E'], ['R', 'E', 'B', 'I', 'A'], ['U', 'L', 'L', 'E', 'T'], ['S', 'L', 'I', 'V', 'E'], ['H', 'O', 'S', 'E', 'R']]",False
+","[['P', 'I', 'C', 'K', 'S'], ['H', 'E', 'R', 'O', 'S'], ['I', 'B', 'L', 'I', 'S'], ['S', 'L', 'U', 'N', 'K'], ['E', 'A', 'T', 'E', 'R']]","[['C', 'H', 'E', 'S', 'E'], ['R', 'E', 'B', 'I', 'A'], ['U', 'L', 'L', 'E', 'T'], ['S', 'L', 'I', 'V', 'E'], ['H', 'O', 'S', 'E', 'R']]",False
 Inference Before Training,6,"
 h1. To hold onto
 h2. An enlarged tool
@@ -22,7 +22,7 @@ v2. A semitone
 v3. To exclude
 v4. An interjection expressing exasperation; nonsense
 v5. To salute
-","[['C', 'L', 'I', 'N', 'G'], ['R', 'A', 'R', 'E', 'K'], ['O', 'B', 'L', 'O', 'C'], ['A', 'B', 'D', 'A', 'L'], ['K', 'A', 'R', 'S', 'T']]","[['C', 'L', 'I', 'N', 'G'], ['R', 'I', 'M', 'E', 'R'], ['O', 'M', 'B', 'R', 'E'], ['A', 'M', 'A', 'T', 'E'], ['K', 'A', 'R', 'S', 'T']]",False
+","[['C', 'L', 'I', 'N', 'G'], ['P', 'I', 'C', 'K', 'S'], ['T', 'I', 'N', 'T', 'S'], ['A', 'B', 'A', 'T', 'E'], ['K', 'A', 'R', 'S', 'T']]","[['C', 'L', 'I', 'N', 'G'], ['R', 'I', 'M', 'E', 'R'], ['O', 'M', 'B', 'R', 'E'], ['A', 'M', 'A', 'T', 'E'], ['K', 'A', 'R', 'S', 'T']]",False
 Inference Before Training,7,"
 h1. Is able
 h2. A bard
@@ -34,7 +34,7 @@ v2. True being
 v3. To undo the sewing of
 v4. To depart; permission
 v5. Desiccator; more dry
-","[['C', 'A', 'N', 'D', 'R'], ['P', 'O', 'E', 'T', 'O'], ['T', 'R', 'Y', 'R', 'V'], ['C', 'U', 'L', 'L', 'E'], ['T', 'O', 'S', 'S', 'E']]","[['C', 'O', 'U', 'L', 'D'], ['R', 'U', 'N', 'E', 'R'], ['E', 'S', 'S', 'A', 'Y'], ['S', 'I', 'E', 'V', 'E'], ['T', 'A', 'W', 'E', 'R']]",False
+","[['A', 'B', 'L', 'E', ' '], ['C', 'R', 'E', 'S', 'T'], ['I', 'D', 'E', 'A', ' '], ['L', 'E', 'A', 'V', 'E'], ['T', 'A', 'N', 'N', 'E']]","[['C', 'O', 'U', 'L', 'D'], ['R', 'U', 'N', 'E', 'R'], ['E', 'S', 'S', 'A', 'Y'], ['S', 'I', 'E', 'V', 'E'], ['T', 'A', 'W', 'E', 'R']]",False
 Inference Before Training,8,"
 h1. A music style; a dance hall
 h2. To remove the hat
@@ -46,7 +46,7 @@ v2. A nickel steel alloy
 v3. To disgrace; to blame; to injure
 v4. Low-lying fertile land
 v5. A sea mammal; a fishing device
-","[['R', 'A', 'G', 'T', 'I'], ['A', 'D', 'O', 'F', 'F'], ['G', 'C', 'L', 'E', 'A'], ['T', 'M', 'A', 'N', 'S'], ['I', 'K', 'A', 'S', 'K']]","[['D', 'I', 'S', 'C', 'O'], ['U', 'N', 'H', 'A', 'T'], ['O', 'V', 'E', 'R', 'T'], ['M', 'A', 'N', 'S', 'E'], ['O', 'R', 'D', 'E', 'R']]",False
+","[['S', 'O', 'U', 'T', 'H'], ['O', 'F', 'F', 'E', 'R'], ['T', 'A', 'B', 'L', 'E'], ['H', 'O', 'U', 'S', 'E'], ['E', 'L', 'E', 'P', 'H']]","[['D', 'I', 'S', 'C', 'O'], ['U', 'N', 'H', 'A', 'T'], ['O', 'V', 'E', 'R', 'T'], ['M', 'A', 'N', 'S', 'E'], ['O', 'R', 'D', 'E', 'R']]",False
 Inference Before Training,9,"
 h1. To belch, to burp
 h2. A location
@@ -58,7 +58,7 @@ v2. To win again
 v3. Inept; irrelevant
 v4. To execrate
 v5. Purport; a trend; a singing voice
-","[['E', 'R', 'U', 'C', 'T'], ['P', 'L', 'A', 'C', 'E'], ['A', 'L', 'E', 'R', 'T'], ['D', 'R', 'U', 'N', 'K'], ['E', 'N', 'T', 'E', 'R']]","[['E', 'R', 'U', 'C', 'T'], ['V', 'E', 'N', 'U', 'E'], ['A', 'W', 'A', 'R', 'N'], ['D', 'I', 'P', 'S', 'O'], ['E', 'N', 'T', 'E', 'R']]",False
+","[['E', 'R', 'U', 'C', 'T'], ['S', 'I', 'T', 'E', ' '], ['A', 'L', 'E', 'R', 'T'], ['D', 'R', 'U', 'N', 'K'], ['E', 'N', 'T', 'E', 'R']]","[['E', 'R', 'U', 'C', 'T'], ['V', 'E', 'N', 'U', 'E'], ['A', 'W', 'A', 'R', 'N'], ['D', 'I', 'P', 'S', 'O'], ['E', 'N', 'T', 'E', 'R']]",False
 Inference Before Training,10,"
 h1. A custard
 h2. A lithograph
@@ -70,7 +70,7 @@ v2. To strike or flog
 v3. Corrupt matter from a sore; a tongue coating
 v4. A bang; a leather thong; to shoot; a shive; the penis
 v5. Would not
-","[['C', 'R', 'E', 'M', 'E'], ['P', 'R', 'I', 'N', 'T'], ['I', 'N', 'N', 'E', 'R'], ['I', 'T', 'E', 'M', 'G'], ['M', 'E', 'R', 'G', 'E']]","[['F', 'L', 'A', 'W', 'N'], ['L', 'I', 'T', 'H', 'O'], ['E', 'N', 'T', 'A', 'L'], ['A', 'G', 'E', 'N', 'D'], ['M', 'E', 'R', 'G', 'E']]",False
+","[['C', 'R', 'E', 'A', 'M'], ['P', 'R', 'I', 'N', 'T'], ['I', 'N', 'N', 'E', 'R'], ['I', 'T', 'E', 'M'], ['M', 'E', 'R', 'G', 'E']]","[['F', 'L', 'A', 'W', 'N'], ['L', 'I', 'T', 'H', 'O'], ['E', 'N', 'T', 'A', 'L'], ['A', 'G', 'E', 'N', 'D'], ['M', 'E', 'R', 'G', 'E']]",False
 Inference Before Training,11,"
 h1. A crowd; a mob
 h2. To get a fresh crew
@@ -82,7 +82,7 @@ v2. To sow again
 v3. To subdue; to terrify; a Central American timber tree
 v4. An electronic message device
 v5. A foe
-","[['M', 'O', 'B', '-', '-'], ['R', 'E', 'A', 'P', '-'], ['M', 'A', 'Y', 'A', '-'], ['T', 'O', 'T', 'E', 'M'], ['C', 'I', 'S', 'T', '-']]","[['F', 'R', 'A', 'P', 'E'], ['R', 'E', 'M', 'A', 'N'], ['O', 'S', 'A', 'G', 'E'], ['T', 'O', 'T', 'E', 'M'], ['E', 'W', 'E', 'R', 'Y']]",False
+","[['M', 'O', 'B', 'A', 'R'], ['R', 'E', 'N', 'E', 'W'], ['M', 'A', 'Y', 'A', 'R'], ['T', 'O', 'T', 'E', 'M'], ['L', 'A', 'R', 'D', 'E']]","[['F', 'R', 'A', 'P', 'E'], ['R', 'E', 'M', 'A', 'N'], ['O', 'S', 'A', 'G', 'E'], ['T', 'O', 'T', 'E', 'M'], ['E', 'W', 'E', 'R', 'Y']]",False
 Inference Before Training,12,"
 h1. A woodland
 h2. An alarm
@@ -94,7 +94,7 @@ v2. A veranda
 v3. A plant allied to the arum
 v4. An edible seaweed (if you say so)
 v5. An Arab prince
-","[['F', 'O', 'R', 'E', 'S'], ['G', 'L', 'A', 'R', 'E'], ['R', 'A', 'I', 'S', 'E'], ['A', 'G', 'A', 'M', 'A'], ['D', 'U', 'V', 'E', 'T']]","[['G', 'L', 'A', 'D', 'E'], ['L', 'A', 'R', 'U', 'M'], ['A', 'N', 'O', 'L', 'E'], ['R', 'A', 'I', 'S', 'E'], ['E', 'I', 'D', 'E', 'R']]",False
+","[['F', 'O', 'R', 'E', 'S'], ['Y', 'E', 'L', 'L', 'O'], ['I', 'G', 'U', 'A', 'N'], ['R', 'A', 'I', 'S', 'E'], ['B', 'E', 'D', 'D', 'Y']]","[['G', 'L', 'A', 'D', 'E'], ['L', 'A', 'R', 'U', 'M'], ['A', 'N', 'O', 'L', 'E'], ['R', 'A', 'I', 'S', 'E'], ['E', 'I', 'D', 'E', 'R']]",False
 Inference Before Training,13,"
 h1. A woodland
 h2. A flight feather
@@ -106,7 +106,7 @@ v2. Flat; a stage; to be honest with
 v3. To entertain
 v4. To dally; to put off
 v5. To praise; to raise higher
-","[['F', 'O', 'R', 'E', 'S'], ['O', 'R', 'A', 'L', 'E'], ['R', 'A', 'C', 'T', 'S'], ['E', 'A', 'P', 'E', 'D'], ['S', 'T', 'R', 'A', 'F', 'T']]","[['G', 'L', 'A', 'D', 'E'], ['R', 'E', 'M', 'E', 'X'], ['U', 'V', 'U', 'L', 'A'], ['M', 'E', 'S', 'A', 'L'], ['P', 'L', 'E', 'Y', 'T']]",False
+","[['F', 'O', 'R', 'E', 'S'], ['O', 'W', 'I', 'N', 'G'], ['R', 'I', 'V', 'E', 'L'], ['E', 'C', 'E', 'N', 'T'], ['S', 'E', 'N', 'E', 'C']]","[['G', 'L', 'A', 'D', 'E'], ['R', 'E', 'M', 'E', 'X'], ['U', 'V', 'U', 'L', 'A'], ['M', 'E', 'S', 'A', 'L'], ['P', 'L', 'E', 'Y', 'T']]",False
 Inference Before Training,14,"
 h1. A language
 h2. To impose a fine upon
@@ -118,7 +118,7 @@ v2. Not bitten
 v3. A heraldic mastiff
 v4. A dog whelk or its shell
 v5. A computer user
-","[['S', 'P', 'A', 'N', 'I', 'S', 'H'], ['P', 'E', 'N', 'A', 'L'], ['L', 'O', 'W', 'E', 'R'], ['R', 'I', 'N', 'S', 'E'], ['T', 'H', 'A', 'T', 'C', 'H']]","[['G', 'U', 'A', 'N', 'G'], ['U', 'N', 'L', 'A', 'W'], ['A', 'B', 'A', 'S', 'E'], ['R', 'I', 'N', 'S', 'E'], ['A', 'T', 'T', 'A', 'P']]",False
+","[['E', 'S', 'P', 'E', 'R'], ['P', 'E', 'N', 'A', 'L'], ['A', 'B', 'A', 'T', 'E'], ['R', 'I', 'N', 'S', 'E'], ['T', 'H', 'A', 'T', 'C', 'H']]","[['G', 'U', 'A', 'N', 'G'], ['U', 'N', 'L', 'A', 'W'], ['A', 'B', 'A', 'S', 'E'], ['R', 'I', 'N', 'S', 'E'], ['A', 'T', 'T', 'A', 'P']]",False
 Inference Before Training,15,"
 h1. The Kaiser
 h2. An introduction
@@ -130,7 +130,7 @@ v2. Anatomically on the inside
 v3. To stew; to stuff up; floating dust
 v4. Equipped; having arms
 v5. To rile; to salt fish
-","[['W', 'I', 'L', 'H', 'E'], ['H', 'E', 'L', 'L', 'O'], ['S', 'H', 'A', 'M', 'E'], ['N', 'A', 'V', 'E', 'L'], ['B', 'R', 'A', 'N', 'D']]","[['K', 'E', 'S', 'A', 'R'], ['I', 'N', 'T', 'R', 'O'], ['A', 'T', 'I', 'M', 'Y'], ['N', 'A', 'V', 'E', 'L'], ['G', 'L', 'E', 'D', 'E']]",False
+","[['G', 'E', 'R', 'M', ' '], ['H', 'E', 'L', 'L', 'O'], ['S', 'H', 'A', 'M', 'E'], ['N', 'A', 'V', 'E', 'L'], ['E', 'M', 'B', 'E', 'R']]","[['K', 'E', 'S', 'A', 'R'], ['I', 'N', 'T', 'R', 'O'], ['A', 'T', 'I', 'M', 'Y'], ['N', 'A', 'V', 'E', 'L'], ['G', 'L', 'E', 'D', 'E']]",False
 Inference Before Training,16,"
 h1. A biblical place
 h2. Relating to sheep
@@ -142,7 +142,7 @@ v2. To happen
 v3. A lariat; a lasso
 v4. An Irish doctor
 v5. To meddle; to mix
-","[['E', 'D', 'E', 'N', ' '], ['O', 'V', 'I', 'N', 'E'], ['G', 'R', 'O', 'V', 'E'], ['I', 'N', 'N', 'E', 'R'], ['R', 'E', 'A', 'L', 'M']]","[['M', 'E', 'R', 'O', 'M'], ['O', 'V', 'I', 'L', 'E'], ['W', 'E', 'A', 'L', 'D'], ['E', 'N', 'T', 'A', 'L'], ['R', 'E', 'A', 'M', 'E']]",False
+","[['E', 'G', 'Y', 'P', 'T'], ['O', 'V', 'I', 'N', 'E'], ['W', 'O', 'O', 'D', 'S'], ['I', 'N', 'N', 'E', 'R'], ['K', 'I', 'N', 'G', 'D']]","[['M', 'E', 'R', 'O', 'M'], ['O', 'V', 'I', 'L', 'E'], ['W', 'E', 'A', 'L', 'D'], ['E', 'N', 'T', 'A', 'L'], ['R', 'E', 'A', 'M', 'E']]",False
 Inference Before Training,17,"
 h1. A deity associated with a natural object
 h2. A habit or custom
@@ -154,7 +154,7 @@ v2. To displace illegally or unfairly
 v3. A craze
 v4. An inciter; various moths whose larva feed on tree leaves; a lobster bearing an egg mass; one who collects eggs
 v5. To sneeze
-","[['N', 'Y', 'M', 'P', 'H'], ['R', 'I', 'T', 'U', 'A'], ['N', 'O', 'S', 'H', 'E'], ['P', 'R', 'I', 'E', 'S'], ['S', 'P', 'A', 'R', 'E']]","[['N', 'U', 'M', 'E', 'N'], ['U', 'S', 'A', 'G', 'E'], ['M', 'U', 'N', 'G', 'E'], ['P', 'R', 'I', 'E', 'S'], ['S', 'P', 'A', 'R', 'E']]",False
+","[['G', 'O', 'D', 'S', 'C'], ['H', 'A', 'B', 'I', 'T'], ['C', 'H', 'E', 'W', 'M'], ['P', 'R', 'Y', 'I', 'N'], ['S', 'P', 'A', 'R', 'E']]","[['N', 'U', 'M', 'E', 'N'], ['U', 'S', 'A', 'G', 'E'], ['M', 'U', 'N', 'G', 'E'], ['P', 'R', 'I', 'E', 'S'], ['S', 'P', 'A', 'R', 'E']]",False
 Inference Before Training,18,"
 h1. A tit-lark
 h2. A Turkish written decree
@@ -166,7 +166,7 @@ v2. Relating to the iris
 v3. An ancient Roman full outer robe or wrap worn outdoors by women
 v4. One who does nothing
 v5. Weepy; tear-filled
-","[['W', 'R', 'E', 'N', '?'], ['F', 'E', 'R', 'M', 'A'], ['J', 'O', 'S', 'E', 'O'], ['F', 'I', 'T', 'T', 'E'], ['U', 'N', 'I', 'L', 'A']]","[['P', 'I', 'P', 'I', 'T'], ['I', 'R', 'A', 'D', 'E'], ['S', 'I', 'L', 'L', 'A'], ['H', 'A', 'L', 'E', 'R'], ['U', 'N', 'A', 'R', 'Y']]",False
+","[['W', 'H', 'E', 'A', 'T'], ['F', 'I', 'R', 'M', 'A'], ['S', 'C', 'L', 'A', 'N'], ['C', 'O', 'R', 'E', 'A'], ['W', 'E', 'T', 'U', 'C']]","[['P', 'I', 'P', 'I', 'T'], ['I', 'R', 'A', 'D', 'E'], ['S', 'I', 'L', 'L', 'A'], ['H', 'A', 'L', 'E', 'R'], ['U', 'N', 'A', 'R', 'Y']]",False
 Inference Before Training,19,"
 h1. To stamp; to brand; to impress; to put into type
 h2. A scarf; a cymar; a loose dress
@@ -178,7 +178,127 @@ v2. A rice processor; an implement for ricing potatoes
 v3. A chemical compound
 v4. A dog whelk or its shell
 v5. Chased up a tree
-","[['I', 'M', 'P', 'R', 'I'], ['S', 'A', 'R', 'O', 'N'], ['C', 'U', 'T', 'T', 'E'], ['S', 'E', 'N', 'S', 'E'], ['T', 'R', 'E', 'A', 'D']]","[['P', 'R', 'I', 'N', 'T'], ['S', 'I', 'M', 'A', 'R'], ['S', 'C', 'I', 'S', 'E'], ['S', 'E', 'N', 'S', 'E'], ['T', 'R', 'E', 'A', 'D']]",False
+","[['T', 'O', 'T', 'E', 'M'], ['O', 'P', 'E', 'R', 'A'], ['T', 'E', 'I', 'N', 'T'], ['E', 'M', 'P', 'A', 'T'], ['M', 'A', 'R', 'S', 'H']]","[['P', 'R', 'I', 'N', 'T'], ['S', 'I', 'M', 'A', 'R'], ['S', 'C', 'I', 'S', 'E'], ['S', 'E', 'N', 'S', 'E'], ['T', 'R', 'E', 'A', 'D']]",False
+Training,0,"
+h1. An agendum; something to be done
+h2. An engine
+h3. Pretentious; flowery
+h4. A salon; a hall
+h5. To mock; to sneer
+v1. To heap
+v2. An Indian antelope
+v3. To intend; to plan; to devise; a nettle; to guess
+v4. A nozzle
+v5. Desiccator; more dry
+",,"[['A', 'G', 'E', 'N', 'D'], ['M', 'O', 'T', 'O', 'R'], ['A', 'R', 'T', 'S', 'Y'], ['S', 'A', 'L', 'L', 'E'], ['S', 'L', 'E', 'E', 'R']]",
+Training,1,"
+h1. To dry up
+h2. To outdo; to bandy words
+h3. A Yoruba-speaking people
+h4. A Passover meal
+h5. Eternal, everlasting
+v1. To ascend; to get up; to come up
+v2. To regain
+v3. To elude
+v4. One who files
+v5. To crave
+",,"[['A', 'R', 'E', 'F', 'Y'], ['R', 'E', 'V', 'I', 'E'], ['I', 'G', 'A', 'L', 'A'], ['S', 'E', 'D', 'E', 'R'], ['E', 'T', 'E', 'R', 'N']]",
+Training,2,"
+h1. (yet more) dissonant jazz, with solo improvisations and complex rhythms
+h2. An Indian mallow
+h3. A religious brother
+h4. To take; to receive
+h5. Argal; crude tartar
+v1. A comic actor or operatic clown
+v2. A mistake
+v3. Existence; a creature
+v4. The ruby snapper fish
+v5. Apparel; an egg preparation used to clarify wine
+",,"[['B', 'E', 'B', 'O', 'P'], ['U', 'R', 'E', 'N', 'A'], ['F', 'R', 'I', 'A', 'R'], ['F', 'O', 'N', 'G', 'E'], ['O', 'R', 'G', 'A', 'L']]",
+Training,3,"
+h1. The genus to which the dog and wolf belong
+h2. An Altaic language
+h3. Ramie, an Asiatic plant yielding a rope fiber
+h4. Face down; susceptible
+h5. An Indian antelope
+v1. A contingent
+v2. The Brazilian macaw; an Australian bird
+v3. A Greek province; a law; a coin
+v4. An ancient British ethnic group
+v5. Gloss; luster
+",,"[['C', 'A', 'N', 'I', 'S'], ['O', 'R', 'O', 'C', 'H'], ['R', 'A', 'M', 'E', 'E'], ['P', 'R', 'O', 'N', 'E'], ['S', 'A', 'S', 'I', 'N']]",
+Training,4,"
+h1. To choose
+h2. A spiral, usually three dimensional
+h3. Notched or uneven, as if gnawed away (cognate with ""erode"")
+h4. A drinker; a sedative
+h5. A pound sterling
+v1. A board game; a British river
+v2. A wading bird
+v3. To run away together to get married
+v4. Cider; sicer
+v5. To put into action
+",,"[['C', 'H', 'E', 'S', 'E'], ['H', 'E', 'L', 'I', 'X'], ['E', 'R', 'O', 'S', 'E'], ['S', 'O', 'P', 'E', 'R'], ['S', 'N', 'E', 'R', 'T']]",
+Training,0,"
+h1. An agendum; something to be done
+h2. An engine
+h3. Pretentious; flowery
+h4. A salon; a hall
+h5. To mock; to sneer
+v1. To heap
+v2. An Indian antelope
+v3. To intend; to plan; to devise; a nettle; to guess
+v4. A nozzle
+v5. Desiccator; more dry
+",,"[['A', 'G', 'E', 'N', 'D'], ['M', 'O', 'T', 'O', 'R'], ['A', 'R', 'T', 'S', 'Y'], ['S', 'A', 'L', 'L', 'E'], ['S', 'L', 'E', 'E', 'R']]",
+Training,1,"
+h1. To dry up
+h2. To outdo; to bandy words
+h3. A Yoruba-speaking people
+h4. A Passover meal
+h5. Eternal, everlasting
+v1. To ascend; to get up; to come up
+v2. To regain
+v3. To elude
+v4. One who files
+v5. To crave
+",,"[['A', 'R', 'E', 'F', 'Y'], ['R', 'E', 'V', 'I', 'E'], ['I', 'G', 'A', 'L', 'A'], ['S', 'E', 'D', 'E', 'R'], ['E', 'T', 'E', 'R', 'N']]",
+Training,2,"
+h1. (yet more) dissonant jazz, with solo improvisations and complex rhythms
+h2. An Indian mallow
+h3. A religious brother
+h4. To take; to receive
+h5. Argal; crude tartar
+v1. A comic actor or operatic clown
+v2. A mistake
+v3. Existence; a creature
+v4. The ruby snapper fish
+v5. Apparel; an egg preparation used to clarify wine
+",,"[['B', 'E', 'B', 'O', 'P'], ['U', 'R', 'E', 'N', 'A'], ['F', 'R', 'I', 'A', 'R'], ['F', 'O', 'N', 'G', 'E'], ['O', 'R', 'G', 'A', 'L']]",
+Training,3,"
+h1. The genus to which the dog and wolf belong
+h2. An Altaic language
+h3. Ramie, an Asiatic plant yielding a rope fiber
+h4. Face down; susceptible
+h5. An Indian antelope
+v1. A contingent
+v2. The Brazilian macaw; an Australian bird
+v3. A Greek province; a law; a coin
+v4. An ancient British ethnic group
+v5. Gloss; luster
+",,"[['C', 'A', 'N', 'I', 'S'], ['O', 'R', 'O', 'C', 'H'], ['R', 'A', 'M', 'E', 'E'], ['P', 'R', 'O', 'N', 'E'], ['S', 'A', 'S', 'I', 'N']]",
+Training,4,"
+h1. To choose
+h2. A spiral, usually three dimensional
+h3. Notched or uneven, as if gnawed away (cognate with ""erode"")
+h4. A drinker; a sedative
+h5. A pound sterling
+v1. A board game; a British river
+v2. A wading bird
+v3. To run away together to get married
+v4. Cider; sicer
+v5. To put into action
+",,"[['C', 'H', 'E', 'S', 'E'], ['H', 'E', 'L', 'I', 'X'], ['E', 'R', 'O', 'S', 'E'], ['S', 'O', 'P', 'E', 'R'], ['S', 'N', 'E', 'R', 'T']]",
 Training,0,"
 h1. An agendum; something to be done
 h2. An engine
@@ -250,7 +370,7 @@ v2. A greeting
 v3. The Islamic name for Satan
 v4. To sift
 v5. One who eats
-","[['S', 'C', 'O', 'P', 'S'], ['E', 'L', 'E', 'C', 'T'], ['L', 'I', 'B', 'I', 'S'], ['E', 'H', 'E', 'R', 'O'], ['C', 'R', 'U', 'S', 'H']]","[['C', 'H', 'E', 'S', 'E'], ['R', 'E', 'B', 'I', 'A'], ['U', 'L', 'L', 'E', 'T'], ['S', 'L', 'I', 'V', 'E'], ['H', 'O', 'S', 'E', 'R']]",False
+","[['V', 'O', 'T', 'E', 'S'], ['A', 'L', 'I', 'G', 'N'], ['T', 'R', 'A', 'N', 'H'], ['E', 'N', 'A', 'T', 'E'], ['S', 'I', 'N', 'E', 'R']]","[['C', 'H', 'E', 'S', 'E'], ['R', 'E', 'B', 'I', 'A'], ['U', 'L', 'L', 'E', 'T'], ['S', 'L', 'I', 'V', 'E'], ['H', 'O', 'S', 'E', 'R']]",False
 Inference After Training,6,"
 h1. To hold onto
 h2. An enlarged tool
@@ -262,7 +382,7 @@ v2. A semitone
 v3. To exclude
 v4. An interjection expressing exasperation; nonsense
 v5. To salute
-","[['G', 'R', 'A', 'S', 'P'], ['S', 'P', 'O', 'O', 'N'], ['W', 'H', 'I', 'S', 'T'], ['C', 'H', 'E', 'W', 'K'], ['K', 'A', 'R', 'S', 'T']]","[['C', 'L', 'I', 'N', 'G'], ['R', 'I', 'M', 'E', 'R'], ['O', 'M', 'B', 'R', 'E'], ['A', 'M', 'A', 'T', 'E'], ['K', 'A', 'R', 'S', 'T']]",False
+","[['GRAB', 'PIPE', 'SWAP', 'SUBD', 'KARST'], ['RIBB', 'A5N5', 'BUBB', 'AMEND', 'ABOOB'], ['AMEELO', 'LWAAB', 'EQUID', 'LAHTA', 'BAAA5'], ['BB50R', 'CARD', 'DUMD', 'DKLDD', 'ALANK'], ['EEEE5', 'MEFLD', 'ORROW', 'BYTEB', 'DUGT5']]","[['C', 'L', 'I', 'N', 'G'], ['R', 'I', 'M', 'E', 'R'], ['O', 'M', 'B', 'R', 'E'], ['A', 'M', 'A', 'T', 'E'], ['K', 'A', 'R', 'S', 'T']]",False
 Inference After Training,7,"
 h1. Is able
 h2. A bard
@@ -274,7 +394,7 @@ v2. True being
 v3. To undo the sewing of
 v4. To depart; permission
 v5. Desiccator; more dry
-","[['C', 'A', 'N', 'T', 'E'], ['A', 'B', 'O', 'U', 'T'], ['N', 'O', 'T', 'I', 'C'], ['T', 'E', 'N', 'S', 'E'], ['E', 'R', 'S', 'T', 'R']]","[['C', 'O', 'U', 'L', 'D'], ['R', 'U', 'N', 'E', 'R'], ['E', 'S', 'S', 'A', 'Y'], ['S', 'I', 'E', 'V', 'E'], ['T', 'A', 'W', 'E', 'R']]",False
+","[['C', 'R', 'O', 'W', 'N'], ['A', 'C', 'T', 'O', 'R'], ['N', 'O', 'T', 'E', 'S'], ['A', 'R', 'E', 'A', 'R'], ['P', 'O', 'E', 'T', 'E']]","[['C', 'O', 'U', 'L', 'D'], ['R', 'U', 'N', 'E', 'R'], ['E', 'S', 'S', 'A', 'Y'], ['S', 'I', 'E', 'V', 'E'], ['T', 'A', 'W', 'E', 'R']]",False
 Inference After Training,8,"
 h1. A music style; a dance hall
 h2. To remove the hat
@@ -286,7 +406,7 @@ v2. A nickel steel alloy
 v3. To disgrace; to blame; to injure
 v4. Low-lying fertile land
 v5. A sea mammal; a fishing device
-","[['S', 'W', 'I', 'N', 'G'], ['M', 'O', 'N', 'E', 'L'], ['C', 'L', 'E', 'A', 'R'], ['P', 'A', 'R', 'S', 'O'], ['D', 'O', 'F', 'F', 'E'], ['R']]","[['D', 'I', 'S', 'C', 'O'], ['U', 'N', 'H', 'A', 'T'], ['O', 'V', 'E', 'R', 'T'], ['M', 'A', 'N', 'S', 'E'], ['O', 'R', 'D', 'E', 'R']]",False
+","[['S', 'W', 'I', 'N', 'G'], ['D', 'O', 'F', 'F'], ['C', 'L', 'E', 'A', 'R'], ['R', 'E', 'C', 'T', 'O'], ['O', 'R', 'D', 'E', 'R']]","[['D', 'I', 'S', 'C', 'O'], ['U', 'N', 'H', 'A', 'T'], ['O', 'V', 'E', 'R', 'T'], ['M', 'A', 'N', 'S', 'E'], ['O', 'R', 'D', 'E', 'R']]",False
 Inference After Training,9,"
 h1. To belch, to burp
 h2. A location
@@ -298,7 +418,7 @@ v2. To win again
 v3. Inept; irrelevant
 v4. To execrate
 v5. Purport; a trend; a singing voice
-","[['E', 'R', 'U', 'C', 'T'], ['P', 'L', 'A', 'C', 'E'], ['A', 'L', 'E', 'R', 'T'], ['D', 'R', 'U', 'N', 'K'], ['E', 'N', 'T', 'E', 'R']]","[['E', 'R', 'U', 'C', 'T'], ['V', 'E', 'N', 'U', 'E'], ['A', 'W', 'A', 'R', 'N'], ['D', 'I', 'P', 'S', 'O'], ['E', 'N', 'T', 'E', 'R']]",False
+","[['E', 'R', 'U', 'C', 'T'], ['S', 'I', 'T', 'E', 'A'], ['A', 'L', 'E', 'R', 'T'], ['L', 'C', 'O', 'H', 'O'], ['E', 'N', 'T', 'E', 'R']]","[['E', 'R', 'U', 'C', 'T'], ['V', 'E', 'N', 'U', 'E'], ['A', 'W', 'A', 'R', 'N'], ['D', 'I', 'P', 'S', 'O'], ['E', 'N', 'T', 'E', 'R']]",False
 Inference After Training,10,"
 h1. A custard
 h2. A lithograph
@@ -310,7 +430,7 @@ v2. To strike or flog
 v3. Corrupt matter from a sore; a tongue coating
 v4. A bang; a leather thong; to shoot; a shive; the penis
 v5. Would not
-","[['C', 'R', 'E', 'M', 'E'], ['E', 'T', 'C', 'H', 'I'], ['I', 'N', 'S', 'I', 'D'], ['T', 'A', 'S', 'K', 'S'], ['M', 'E', 'R', 'G', 'E']]","[['F', 'L', 'A', 'W', 'N'], ['L', 'I', 'T', 'H', 'O'], ['E', 'N', 'T', 'A', 'L'], ['A', 'G', 'E', 'N', 'D'], ['M', 'E', 'R', 'G', 'E']]",False
+","[['C', 'R', 'E', 'M', 'E'], ['P', 'R', 'I', 'N', 'T'], ['I', 'N', 'N', 'E', 'R'], ['T', 'A', 'S', 'K'], ['J', 'O', 'I', 'N']]","[['F', 'L', 'A', 'W', 'N'], ['L', 'I', 'T', 'H', 'O'], ['E', 'N', 'T', 'A', 'L'], ['A', 'G', 'E', 'N', 'D'], ['M', 'E', 'R', 'G', 'E']]",False
 Inference After Training,11,"
 h1. A crowd; a mob
 h2. To get a fresh crew
@@ -322,7 +442,7 @@ v2. To sow again
 v3. To subdue; to terrify; a Central American timber tree
 v4. An electronic message device
 v5. A foe
-","[['G', 'A', 'N', 'G', ' '], ['R', 'E', 'N', 'E', 'W'], ['O', 'S', 'A', 'G', 'E'], ['T', 'O', 'T', 'E', 'M'], ['P', 'A', 'N', 'T', 'R']]","[['F', 'R', 'A', 'P', 'E'], ['R', 'E', 'M', 'A', 'N'], ['O', 'S', 'A', 'G', 'E'], ['T', 'O', 'T', 'E', 'M'], ['E', 'W', 'E', 'R', 'Y']]",False
+","[['F', 'L', 'O', 'C', 'K'], ['R', 'E', 'N', 'E', 'W'], ['C', 'R', 'E', 'E', 'K'], ['T', 'O', 'T', 'E', 'M'], ['P', 'A', 'N', 'T', 'R', 'Y']]","[['F', 'R', 'A', 'P', 'E'], ['R', 'E', 'M', 'A', 'N'], ['O', 'S', 'A', 'G', 'E'], ['T', 'O', 'T', 'E', 'M'], ['E', 'W', 'E', 'R', 'Y']]",False
 Inference After Training,12,"
 h1. A woodland
 h2. An alarm
@@ -334,7 +454,7 @@ v2. A veranda
 v3. A plant allied to the arum
 v4. An edible seaweed (if you say so)
 v5. An Arab prince
-","[['F', 'O', 'R', 'E', 'S', 'T'], ['R', 'I', 'N', 'G', 'S'], ['I', 'G', 'U', 'A', 'N', 'A'], ['S', 'T', 'E', 'A', 'R', 'A'], ['D', 'U', 'V', 'E', 'T']]","[['G', 'L', 'A', 'D', 'E'], ['L', 'A', 'R', 'U', 'M'], ['A', 'N', 'O', 'L', 'E'], ['R', 'A', 'I', 'S', 'E'], ['E', 'I', 'D', 'E', 'R']]",False
+","[['W', 'O', 'O', 'D', 'S'], ['S', 'I', 'R', 'E', 'N'], ['I', 'G', 'U', 'A', 'N'], ['R', 'A', 'I', 'S', 'E'], ['D', 'O', 'U', 'C', 'E']]","[['G', 'L', 'A', 'D', 'E'], ['L', 'A', 'R', 'U', 'M'], ['A', 'N', 'O', 'L', 'E'], ['R', 'A', 'I', 'S', 'E'], ['E', 'I', 'D', 'E', 'R']]",False
 Inference After Training,13,"
 h1. A woodland
 h2. A flight feather
@@ -346,7 +466,7 @@ v2. Flat; a stage; to be honest with
 v3. To entertain
 v4. To dally; to put off
 v5. To praise; to raise higher
-","[['GLADE', 'WINGE', 'ULVAH', 'MEDIA', 'BOATY'], ['G', 'W', 'U', 'M', 'B'], ['L', 'I', 'V', 'A', 'H'], ['A', 'N', 'E', 'R', 'Y'], ['D', 'G', 'D', 'A', 'R']]","[['G', 'L', 'A', 'D', 'E'], ['R', 'E', 'M', 'E', 'X'], ['U', 'V', 'U', 'L', 'A'], ['M', 'E', 'S', 'A', 'L'], ['P', 'L', 'E', 'Y', 'T']]",False
+","[['F', 'O', 'R', 'E', 'S', 'T'], ['T', 'A', 'L', 'O', 'N'], ['V', 'E', 'L', 'U', 'M'], ['M', 'I', 'D', 'S', 'T'], ['C', 'A', 'N', 'O', 'E']]","[['G', 'L', 'A', 'D', 'E'], ['R', 'E', 'M', 'E', 'X'], ['U', 'V', 'U', 'L', 'A'], ['M', 'E', 'S', 'A', 'L'], ['P', 'L', 'E', 'Y', 'T']]",False
 Inference After Training,14,"
 h1. A language
 h2. To impose a fine upon
@@ -358,7 +478,7 @@ v2. Not bitten
 v3. A heraldic mastiff
 v4. A dog whelk or its shell
 v5. A computer user
-","[['T', 'A', 'G', 'A', 'L'], ['F', 'I', 'N', 'E', 'D'], ['C', 'U', 'T', ' ', ' '], ['R', 'I', 'N', 'S', 'E'], ['N', 'I', 'P', 'A', ' ']]","[['G', 'U', 'A', 'N', 'G'], ['U', 'N', 'L', 'A', 'W'], ['A', 'B', 'A', 'S', 'E'], ['R', 'I', 'N', 'S', 'E'], ['A', 'T', 'T', 'A', 'P']]",False
+","[['G', 'E', 'R', 'M', 'A', 'N'], ['F', 'I', 'N', 'U', 'N'], ['L', 'O', 'W', 'E', 'R'], ['R', 'I', 'N', 'S', 'E'], ['N', 'I', 'P', 'A', 'E']]","[['G', 'U', 'A', 'N', 'G'], ['U', 'N', 'L', 'A', 'W'], ['A', 'B', 'A', 'S', 'E'], ['R', 'I', 'N', 'S', 'E'], ['A', 'T', 'T', 'A', 'P']]",False
 Inference After Training,15,"
 h1. The Kaiser
 h2. An introduction
@@ -370,7 +490,7 @@ v2. Anatomically on the inside
 v3. To stew; to stuff up; floating dust
 v4. Equipped; having arms
 v5. To rile; to salt fish
-","[['W', 'I', 'L', 'H', 'E'], ['P', 'R', 'E', 'L', 'U'], ['S', 'H', 'A', 'M', 'E'], ['N', 'A', 'V', 'E', 'L'], ['E', 'M', 'B', 'E', 'R']]","[['K', 'E', 'S', 'A', 'R'], ['I', 'N', 'T', 'R', 'O'], ['A', 'T', 'I', 'M', 'Y'], ['N', 'A', 'V', 'E', 'L'], ['G', 'L', 'E', 'D', 'E']]",False
+","[['W', 'I', 'L', 'H', 'E'], ['E', 'L', 'L', 'O', ''], ['S', 'C', 'A', 'N', 'D'], ['N', 'A', 'V', 'E', 'L'], ['B', 'R', 'A', 'N', 'D']]","[['K', 'E', 'S', 'A', 'R'], ['I', 'N', 'T', 'R', 'O'], ['A', 'T', 'I', 'M', 'Y'], ['N', 'A', 'V', 'E', 'L'], ['G', 'L', 'E', 'D', 'E']]",False
 Inference After Training,16,"
 h1. A biblical place
 h2. Relating to sheep
@@ -382,7 +502,7 @@ v2. To happen
 v3. A lariat; a lasso
 v4. An Irish doctor
 v5. To meddle; to mix
-","[['N', 'O', 'D', 'M', 'A'], ['O', 'V', 'I', 'N', 'E'], ['G', 'R', 'O', 'V', 'E'], ['I', 'N', 'N', 'E', 'R'], ['D', 'O', 'C', 'K', 'T']]","[['M', 'E', 'R', 'O', 'M'], ['O', 'V', 'I', 'L', 'E'], ['W', 'E', 'A', 'L', 'D'], ['E', 'N', 'T', 'A', 'L'], ['R', 'E', 'A', 'M', 'E']]",False
+","[['A', 'R', 'E', 'A', 'S'], ['O', 'V', 'I', 'N', 'E'], ['W', 'O', 'O', 'D', 'S'], ['I', 'N', 'N', 'E', 'R'], ['D', 'O', 'M', 'A', 'I']]","[['M', 'E', 'R', 'O', 'M'], ['O', 'V', 'I', 'L', 'E'], ['W', 'E', 'A', 'L', 'D'], ['E', 'N', 'T', 'A', 'L'], ['R', 'E', 'A', 'M', 'E']]",False
 Inference After Training,17,"
 h1. A deity associated with a natural object
 h2. A habit or custom
@@ -394,7 +514,7 @@ v2. To displace illegally or unfairly
 v3. A craze
 v4. An inciter; various moths whose larva feed on tree leaves; a lobster bearing an egg mass; one who collects eggs
 v5. To sneeze
-","[['G', 'O', 'D', 'E', 'D'], ['R', 'I', 'T', 'U', 'A'], ['C', 'H', 'E', 'W', 'Y'], ['P', 'R', 'Y', 'E', 'D'], ['S', 'P', 'A', 'R', 'E']]","[['N', 'U', 'M', 'E', 'N'], ['U', 'S', 'A', 'G', 'E'], ['M', 'U', 'N', 'G', 'E'], ['P', 'R', 'I', 'E', 'S'], ['S', 'P', 'A', 'R', 'E']]",False
+","[['D', 'O', 'T', 'E', 'S'], ['I', 'D', 'I', 'O', 'T'], ['T', 'U', 'K', 'U', 'N'], ['A', 'C', 'T', 'S', ''], ['H', 'A', 'B', 'I', 'T']]","[['N', 'U', 'M', 'E', 'N'], ['U', 'S', 'A', 'G', 'E'], ['M', 'U', 'N', 'G', 'E'], ['P', 'R', 'I', 'E', 'S'], ['S', 'P', 'A', 'R', 'E']]",False
 Inference After Training,18,"
 h1. A tit-lark
 h2. A Turkish written decree
@@ -406,7 +526,7 @@ v2. Relating to the iris
 v3. An ancient Roman full outer robe or wrap worn outdoors by women
 v4. One who does nothing
 v5. Weepy; tear-filled
-","[['W', 'R', 'E', 'N', ' '], ['F', 'E', 'R', 'M', 'A'], ['C', 'O', 'R', 'E', 'A'], ['F', 'I', 'T', 'T', 'E'], ['U', 'N', 'I', 'L', 'A']]","[['P', 'I', 'P', 'I', 'T'], ['I', 'R', 'A', 'D', 'E'], ['S', 'I', 'L', 'L', 'A'], ['H', 'A', 'L', 'E', 'R'], ['U', 'N', 'A', 'R', 'Y']]",False
+","[['P', 'I', 'P', 'I', 'T'], ['F', 'E', 'R', 'M', 'A'], ['C', 'H', 'O', 'S', 'U'], ['F', 'I', 'T', 'T', 'E'], ['O', 'U', 'T', 'E', 'R']]","[['P', 'I', 'P', 'I', 'T'], ['I', 'R', 'A', 'D', 'E'], ['S', 'I', 'L', 'L', 'A'], ['H', 'A', 'L', 'E', 'R'], ['U', 'N', 'A', 'R', 'Y']]",False
 Inference After Training,19,"
 h1. To stamp; to brand; to impress; to put into type
 h2. A scarf; a cymar; a loose dress
@@ -418,4 +538,4 @@ v2. A rice processor; an implement for ricing potatoes
 v3. A chemical compound
 v4. A dog whelk or its shell
 v5. Chased up a tree
-","[['P', 'R', 'E', 'S', 'S'], ['R', 'I', 'C', 'E', 'R'], ['E', 'S', 'L', 'I', 'C'], ['T', 'R', 'E', 'A', 'D'], ['S', 'E', 'N', 'S', 'E']]","[['P', 'R', 'I', 'N', 'T'], ['S', 'I', 'M', 'A', 'R'], ['S', 'C', 'I', 'S', 'E'], ['S', 'E', 'N', 'S', 'E'], ['T', 'R', 'E', 'A', 'D']]",False
+","[['p', 'r', 'i', 'n', 't'], ['r', 'a', 'p', 's', 's'], ['s', 'l', 'a', 's', 'h'], ['e', 'n', 's', 'e', 's'], ['t', 'r', 'e', 'a', 'd']]","[['P', 'R', 'I', 'N', 'T'], ['S', 'I', 'M', 'A', 'R'], ['S', 'C', 'I', 'S', 'E'], ['S', 'E', 'N', 'S', 'E'], ['T', 'R', 'E', 'A', 'D']]",False

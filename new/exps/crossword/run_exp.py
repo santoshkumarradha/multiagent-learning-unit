@@ -250,7 +250,23 @@ if __name__ == "__main__":
     dataset = CrosswordDataset(file_path="./mini0505_0_100_5.json")
 
     # Define train and test indices
-    train_indices = [0, 1, 2, 3, 4]  # Train on these indices
+    train_indices = [
+        0,
+        1,
+        2,
+        3,
+        4,
+        0,
+        1,
+        2,
+        3,
+        4,
+        0,
+        1,
+        2,
+        3,
+        4,
+    ]  # Train on these indices
     test_indices = [
         5,
         6,
