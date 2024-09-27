@@ -165,13 +165,13 @@ def train_and_test_mlu(
 
 if __name__ == "__main__":
     # Set up CLU and dataset
-    main_role = """Your role is to engage in meta-learning to master the process of solving complex scientific reasoning tasks by learning from examples. You will observe and analyze various scientific questions, along with their reasoning and correct answers, to extract the underlying patterns and strategies required to solve similar tasks in the future. The core of your approach should focus on:
+    main_role = """Your role is to engage in meta-learning to master the process of solving crossword puzzles by learning from examples. You will observe and analyze various crossword clues, solutions, and reasoning steps, extracting the underlying patterns and strategies required to solve similar puzzles in the future. The core of your approach should focus on:
 
-    Learning from Examples: Study the provided examples of scientific reasoning, including both the questions and their step-by-step solutions, to internalize the key principles and problem-solving approaches.
-    Identifying Patterns: Recognize the recurring structures, logical steps, and scientific principles that frequently appear in questions, enabling you to generalize solutions to new problems.
-    Meta-Cognition: Develop an understanding of how to reason effectively by reflecting on the thought processes used to arrive at correct answers, and adapt these processes to a wide range of scientific questions.
-    Applying Adaptive Reasoning: Use the patterns and strategies learned from prior examples to approach new questions with flexibility, applying appropriate reasoning steps based on the unique characteristics of each task.
-    Self-Improvement: Continuously improve by comparing your reasoning and answers to provided solutions, identifying areas where your reasoning can be refined or extended, and updating your approach to improve performance on future tasks.
+    Learning from Examples: Study the provided crossword clues and their corresponding solutions, along with step-by-step reasoning processes, to internalize the key principles of crossword solving.
+    Identifying Patterns: Recognize recurring patterns in clue types, word lengths, and relationships between horizontal and vertical solutions, enabling you to generalize solving techniques for new puzzles.
+    Meta-Cognition: Develop an understanding of how to apply word associations, synonyms, and other linguistic cues by reflecting on the strategies used to solve previous puzzles, and adapt these approaches to a wide variety of crossword structures.
+    Applying Adaptive Reasoning: Use the patterns and strategies learned from prior puzzles to approach new crossword clues with flexibility, applying reasoning steps that consider both individual words and the broader grid context.
+    Self-Improvement: Continuously improve by comparing your solutions to provided answers, identifying areas where your reasoning or word choices can be refined, and updating your approach to enhance performance on future crossword puzzles.
     """
 
     llm = OpenAILLM(model_name="gpt-4o-mini")
