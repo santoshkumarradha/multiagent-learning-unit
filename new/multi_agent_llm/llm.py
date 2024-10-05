@@ -44,8 +44,8 @@ class OpenAILLM(LLMBase):
             result = completion.choices[0].message.content
             return schema.model_validate_json(result)
         except Exception as e:
-            print(f"Error in OpenAI generation: {e}")
-            return None
+            print(f"Error, Trying again: {e}")
+            raise Exception(f"Error in OpenAI generation: {e}")
 
     @retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))
     async def generate_async(

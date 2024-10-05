@@ -181,7 +181,7 @@ class CLU:
         if self.custom_analysis_agent is None:
             self.operational_agent = Agent(
                 name="OperationalAgent",
-                role="Execute tasks based on the provided prompt",
+                role="Execute tasks based on the provided prompt. Think step by step based on the context and execute the task. Use the knowledge provided to solve the task.",
                 function=prompt,
             )
         else:
@@ -195,16 +195,19 @@ class CLU:
             role="Generate and optimize prompts for the Operational Agent",
             function=f"""
             Main Goal: {self.main_role}
-            
-            Your task is to generate and optimize prompts for the Operational Agent.
-            Consider the main goal, available knowledge, and task at hand.
-            Combine goal-oriented and task-specific elements to create effective prompts that will help solve the given task.
-            
-            Output a prompt that includes:
-            1. A clear definition of the agent's role
-            2. A detailed description of the agent's function and responsibilities based on relevant knowledge and task at hand
-            3. Specific instructions to help solve the current task or work on it better with the main goal in mind based on relevant knowledge.
-            4. Relevant knowledge to consider (if available)
+            You are responsible for generating and optimizing prompts for the Operational Agent by effectively synthesizing general and task-specific knowledge. To create an effective prompt, follow these instructions:
+
+            1. **Role Definition**: Clearly define the agent's role by specifying the broader goal and the expected actions. Highlight how this role contributes to achieving the main goal.
+            2. **Task-Specific Insights**: Extract relevant knowledge from previous similar tasks (Prompt-Specific Knowledge) to adapt the prompt for the current scenario.
+            3. **Knowledge Integration**: Integrate general knowledge that could be useful in providing contextual understanding for the task. Combine insights to provide an enriched prompt.
+            4. **Feedback Utilization**: If available, use feedback from past task execution to enhance this prompt. Identify areas for improvement and adjust accordingly to refine the prompt’s quality.
+            5. **Output Requirements**: Ensure the prompt includes specific instructions that help to solve the current task effectively, specifying the criteria for success.
+
+            Output Format: 
+            - **Role**: Define the agent’s role.
+            - **Function**: Detailed description of the responsibilities.
+            - **Instructions**: Task-specific guidance based on retrieved knowledge.
+            - **Knowledge to Consider**: Integrate relevant general knowledge or insights from prior prompts.
             """,
         )
 
@@ -212,112 +215,89 @@ class CLU:
             name="ResponseComparison",
             role="Compare the agent's response to the expected output",
             function="""
-            Your task is to compare the agent's response to the expected output.
-            check the task, and the expected output and then compare the response to the expected output for the given task.
-            - Determine if the response matches the expected output exactly
-            - If it does not match exactly see if it matches in meaning and intent clearly and unambiguously.
-            - Provide an explanation of your comparison, highlighting similarities and differences
-            - Return a boolean indicating whether the response is correct and an explanation
-            - if the response says the same thing as expected output (first check verbatim, if not in intent), then it is correct, if not, then it is wrong. First compare them verbatim, if it does not match, then compare them in terms of meaning and intent.
+                        You are responsible for comparing the Operational Agent's response to the expected output for the given task. Follow these steps:
+
+            1. **Exact Match**: First, compare the response and the expected output verbatim. If they match, mark it as correct.
+            2. **Semantic Similarity**: If there is no verbatim match, evaluate whether the response and expected output convey the same meaning. Use contextual cues to determine if the key information aligns.
+            3. **Goal Alignment Check**: Evaluate if the response aligns with the overall main goal of the task, even if the format differs. Assess how well the response satisfies the broader objectives.
+            4. **Detailed Analysis**: Highlight the key similarities and differences between the response and expected output.
+            5. **Output Result**: Provide a boolean indicating whether the response is correct, along with a comprehensive explanation.
+
+            Make sure your comparison is thorough, factoring in both correctness and goal alignment.
             """,
         )
 
         self.general_feedback_agent = Agent(
             name="GeneralFeedbackAnalysis",
-            role="Provide general feedback on the agent's performance",
+            role="Provide comprehensive feedback on the operational agent's performance, focusing on the reasoning behind the response, the relevance of the retrieved knowledge, and the overall alignment with the main goal.",
             function="""
-            You are responsible for providing general feedback on the Operational Agent's performance when no expected output is provided.
-            Your tasks include:
-            - Evaluate the relevance and quality of the response in relation to the given task
-            - Assess the reasoning process and its effectiveness
-            - Suggest potential improvements or areas for further exploration
-            - Identify any apparent knowledge gaps
-            - Provide a performance score and detailed feedback
-            Consider the overall goal of the CLU while providing feedback.
-             - question and evaluate things you are not sure about, and provide feedback on the reasoning and the response.
-            - ask about knowledge gaps and provide feedback on the reasoning and the response or lack of such knowledge.
-            Consider the overall goal of the CLU while providing feedback.
-            If no expected output is provided, evaluate the response based on its relevance and quality for the given task and overall goal.
-            check if the reasoning and the reply makes sense given the main goal of what we are trying to achieve.
+            You are responsible for evaluating the response of the Operational Agent, even when no expected output is provided.
+            Assess the relevance of the retrieved knowledge, how effectively it was utilized, and whether it aligns with the task at hand and the main goal.
+            Analyze the reasoning process used to derive the response. Identify any gaps in reasoning or areas where the connection between knowledge and task execution could be stronger.
+            Provide detailed, actionable feedback on the strengths and weaknesses of the response, emphasizing any knowledge gaps and opportunities for refining or correcting the reasoning used.
+            Highlight potential improvements or new approaches that align the reasoning more closely with the main goal, considering the quality of the retrieved knowledge and its application.
+            Deliver a performance score between 0 and 1, and offer suggestions that will help the Operational Agent refine its reasoning in future tasks.
+            Reinforce the importance of effective reasoning and the correct use of knowledge, suggesting how to adaptively learn from this feedback.
             Important: Prefer giving detailed and comprehensive yet not verbose feedback that is not already there in the knowledge, but will help and is correct.
             """,
         )
 
         self.positive_feedback_agent = Agent(
             name="PositiveFeedbackAnalysis",
-            role="Analyze successful responses and extract insights",
+            role="Analyze successful responses to reinforce correct application of knowledge and reasoning, and to reinforce the learning.",
             function="""
-            You are responsible for analyzing successful responses from the Operational Agent.
-            Your tasks include:
-            - Evaluate why the response correctly matches the expected output
-            - Identify key elements in the reasoning that led to the correct answer
-            - Suggest how this success can be replicated in future tasks
-            - Highlight any particularly effective strategies used
-            - Provide a performance score and detailed feedback
-            Consider the overall goal of the CLU while providing feedback.
-             - question and evaluate things you are not sure about, and provide feedback on the reasoning and the response.
-            - ask about knowledge gaps and provide feedback on the reasoning and the response or lack of such knowledge.
-            Consider the overall goal of the CLU while providing feedback.
-            If no expected output is provided, evaluate the response based on its relevance and quality for the given task.
-            
-            Make sure to compare the output to that of expected output, if it is the same give reasons as to what made the main agent reply this way and extract insights, if its wrong, extract and explain what caused it wrong warning signs and how to avoid it in future to make sure we use this for future new tasks.
-            Do not give positive feedback for wrong expected output, make sure to give feedback on what went wrong and how to avoid it in future.
-            Important: Prefer giving detailed and comprehensive yet not verbose feedback that is not already there in the knowledge, but will help and is correct.
+            When the response is correct, you are tasked with evaluating why the correct outcome was achieved and reinforcing the positive aspects of the reasoning and knowledge use. Specifically, you need to:
+            - **Identify Key Elements of Success**: Analyze and identify the key factors that led to the successful response. Evaluate the role of retrieved knowledge and the reasoning process. What knowledge was most relevant and why? What reasoning steps were crucial for reaching the correct outcome?
+            - **Reinforce Correct Knowledge Use**: Reinforce why the retrieved knowledge was appropriate for the task. Explain how the retrieved information contributed to the success of the task and how the correct application of this knowledge was instrumental in achieving the desired output.
+            - **Generalize Successful Approach**: Provide insights into how this approach can be generalized and used for similar tasks in the future. Highlight specific reasoning pathways and decision-making processes that were effective, so that they can be replicated.
+            - **Update Knowledge Base with Successful Patterns**: Suggest updating the knowledge base with the successful strategies and patterns observed. Reinforce any positive aspects of the prompt and general knowledge that were particularly effective in producing the correct output. Emphasize new, specific, reusable knowledge entries that can guide similar tasks in the future.
+            - **Emphasize Correct Reasoning and Knowledge Pathways**: Describe why the reasoning taken by the agent aligned well with the broader goal. Explain why the knowledge retrieved was not only appropriate but also ideal for the task and how these specific actions can be used to improve adaptability and generalization for other similar tasks.
+            - **Provide Actionable Recommendations for Future Success**: Offer specific points that must be repeated to ensure consistent success. Describe how to best utilize this correct knowledge and effective reasoning pattern in similar future scenarios, so the agent has a better chance of replicating the same success.
+            - **Feedback for Consistency**: Ensure that all relevant reasoning steps are documented and stored in the knowledge base, which can reinforce consistency across future task execution.
+            Important: Prefer giving detailed, comprehensive feedback that includes analysis not already in the knowledge base, but which is valuable to reinforce success. Be explicit about what actions worked, which knowledge was beneficial, and why. This feedback should enhance the agent's future decision-making capabilities.
             """,
         )
 
         self.negative_feedback_agent = Agent(
             name="NegativeFeedbackAnalysis",
-            role="Analyze incorrect responses and provide improvement suggestions",
+            role="Critically analyze incorrect responses, focusing on evaluating the retrieved knowledge, flaws in reasoning, and providing corrective feedback.",
             function="""
-            You are responsible for analyzing incorrect responses from the Operational Agent.
-            Your tasks include:
-            - Evaluate why the response does not match the expected output
-            - Identify gaps in knowledge or reasoning that led to the incorrect answer
-            - Suggest specific improvements to the knowledge base or agent's function
-            - Provide strategies to avoid similar mistakes in the future
-            - provide negative feedback as to what not to do in future.
-            - Provide a performance score and detailed feedback
-            Consider the overall goal of the CLU while providing feedback.
-             - question and evaluate things you are not sure about, and provide feedback on the reasoning and the response.
-            - ask about knowledge gaps and provide feedback on the reasoning and the response or lack of such knowledge.
-            Consider the overall goal of the CLU while providing feedback.
-            If no expected output is provided, evaluate the response based on its relevance and quality for the given task.
-            
-            Make sure to compare the output to that of expected output, if it is the same give reasons as to what made the main agent reply this way and extract insights, if its wrong, extract and explain what caused it wrong warning signs and how to avoid it in future to make sure we use this for future new tasks.
-            Do not give positive feedback for wrong expected output, make sure to give feedback on what went wrong and how to avoid it in future.
-            Important: Prefer giving detailed and comprehensive yet not verbose feedback that is not already there in the knowledge, but will help and is correct.
+            When the response is incorrect, you are tasked with evaluating the root cause of the failure. You need to:
+            - **Critically Evaluate Retrieved Knowledge**: Analyze why the retrieved knowledge was incorrect, insufficient, or improperly used for the given task. Explicitly determine if the knowledge itself was flawed or if there was a gap in the knowledge that prevented the correct reasoning.
+            - **Reasoning and Application Flaws**: Identify specific flaws in how the retrieved knowledge was applied. Was the reasoning appropriate given the task at hand? How did the use (or misuse) of knowledge lead to the deviation from the expected output?
+            - **Explain Impact on Outcome**: Explain how the incorrect or insufficient use of knowledge affected the overall outcome and why the correct answer wasn't reached. Was there a misinterpretation of the retrieved information, or was critical information missing?
+            - **Provide Knowledge Correction Suggestions**: Suggest specific corrections to the existing knowledge. Highlight what new insights, corrections, or additional knowledge should be added to bridge the identified gaps. Make it explicit how these corrections can improve future performance for similar tasks.
+            - **Improvement Strategies**: Provide actionable strategies to ensure similar mistakes are avoided in the future. Explain how to properly apply relevant knowledge and improve reasoning steps to ensure alignment with the main goal.
+            - **New Knowledge Recommendations**: Recommend new knowledge entries that could help better address the knowledge gap. Be explicit about what was missing and what new information would have led to the correct output.
+            Make sure to compare the output to the expected output. If it is incorrect, explain in detail why it went wrong, what knowledge or reasoning caused the deviation, and how these specific issues can be addressed in future iterations.
+            Important: Your feedback must be critical yet constructive. Prefer detailed and comprehensive analysis that is not already in the knowledge base, focusing on gaps that, if filled, would have a substantial impact on improving the accuracy of the response. Be explicit about both the reasoning and the knowledge gaps, and focus on changes that need to be made to align with the overall main goal.
             """,
         )
 
         self.knowledge_insight_agent = Agent(
             name="KnowledgeInsight",
             role="""
-            You are tasked with extracting and generalizing key knowledge from various inputs to support the main goal. 
-            Your primary responsibility is to distill generalizable insights that can be applied to future tasks with similar main goals. 
-            This involves identifying patterns, formulating reusable knowledge entries, and ensuring the knowledge extracted is broadly applicable and not overly specific to individual tasks.
+            You are responsible for converting feedback (positive or negative) into generalizable knowledge entries for the knowledge management units (KMUs). 
+            Your main objective is to analyze the feedback, understand what worked or failed, and derive broadly applicable knowledge that enhances the system's future performance.
+            The knowledge you extract should be abstract enough to apply to a wide range of similar tasks, while still being actionable and relevant.
             """,
             function="""
-            You are responsible for extracting and generalizing key knowledge. 
-            Your tasks include:
-
-            - Analyzing feedback, tasks, responses, and context to understand the main goal.
-            - Provide positive feedback on what worked.
-            - Detecting patterns and formulating general rules based on the analysis.
-            - Extracting key elements that influence the quality of task answers.
-            - Formulating general, reusable knowledge entries that can be applied to future tasks.
-            - Provide a clear list of knowledge to be added to the database, the list should be diverse and each element should be unique and contain new knowledge to be added.
-            - This list may include the following in a combined format as well: Concepts: Fundamental principles that underpin the task structure to achieve the main goal. Ideas: Innovative concepts that can improve task performance. Principles: Core values or standards to uphold. Rules: Guidelines or protocols that should be followed for optimal task performance.
-            - include things in format that will help us do the main goal better based on the task, feedback and reasoning.
-            - Include the applicability: Contexts or scenarios where each piece of knowledge is relevant.
-            
-            derive general rules and principles from the feedback and reasoning that can be applied to future tasks.
-            
-            you are responsible for adding knowledge in a database that will help us do this the main goal better based on the task, feedback and reasoning.
-            IMPORTANT: 
-            1.Please add diverse knowledge that is not already there in the context given.
-            **2.Make sure you extract and add knowledge that is aligned and geared towards achieving the overall goal.**
-            3. do not memorize and store exact input-output pairs but rather the reasoning and the knowledge that can be used to solve the task.
+            You are tasked with transforming feedback into meaningful and generalizable knowledge entries to be stored in the KMU. Your responsibilities include:
+            - **Analyze Feedback, Tasks, and Responses**: Analyze the feedback provided (positive or negative) along with the context of the task and the response. Understand both what led to the success and where failures occurred.
+            - **Distill Generalizable Insights**: Based on your analysis, detect patterns and derive general rules that could improve the agent's performance in similar future tasks. This might include extracting effective strategies, pitfalls to avoid, or any refined reasoning pathways that align with the overall goal.
+            - **Extract Reusable Knowledge and Rules**: Formulate knowledge entries that can be used for future tasks. Ensure that each piece of knowledge is unique, diverse, and represents new learnings. Avoid storing direct input-output pairs; instead, focus on storing the reasoning process, patterns, and knowledge that help the system solve similar tasks more effectively.
+            - **Differentiate Between Types of Knowledge**:
+                - **Concepts**: Identify and store the fundamental principles that underpin the successful completion of the task.
+                - **Ideas**: Capture innovative concepts that led to better task performance.
+                - **Principles and Rules**: Store core principles, guidelines, or protocols that can improve performance across a range of similar tasks.
+                - **Effective Prompts and Reasoning Paths**: Store prompts and reasoning that contributed positively to the task, along with the associated task contexts.
+            - **Applicability and Context**: For each piece of knowledge, specify the contexts or scenarios where it is relevant. This will help in retrieving the right knowledge when needed in the future.
+            - **Identify and Fill Gaps**: If there were knowledge gaps that led to negative outcomes, determine what knowledge could have prevented these issues and include it in the entries. Similarly, reinforce any effective knowledge that led to success.
+            - **Ensure Knowledge Diversity and Quality**: Make sure the extracted knowledge is diverse and not redundant. It should add meaningful insights to the knowledge base that are not already present. Prioritize knowledge that is actionable and can directly improve task completion in the future.
+            IMPORTANT:
+            1. Do not memorize and store exact input-output pairs. Focus on the reasoning, patterns, and knowledge that support task completion.
+            2. Extract knowledge that is geared towards achieving the main goal more effectively in the future.
+            3. Reinforce successful reasoning pathways and highlight corrective knowledge where failures occurred to ensure overall system improvement.
             """,
         )
 

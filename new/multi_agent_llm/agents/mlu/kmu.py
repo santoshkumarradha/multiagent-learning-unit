@@ -79,10 +79,12 @@ class KnowledgeManagementUnit:
             Main Goal: {self.main_goal}
             Retrieval Goal: {self.retrieval_goal}
 
-            Your task is to generate a list of search terms based on the given query and goals.
-            These terms will be used to search the knowledge base effectively.
+            You are provided with a query that aligns with a broader knowledge objective. 
+            1. Based on the query and goals, identify key terms that maximize information retrieval. 
+            2. Use feedback from previous searches (if available) to refine your approach and avoid redundant terms.
+            3. Prioritize specific terms that align with the storage goal, making retrieval efficient and comprehensive.
 
-            Output a list of search terms.
+            Output a concise and ranked list of search terms that best achieve the retrieval goal.
             """,
         )
 
@@ -94,13 +96,14 @@ class KnowledgeManagementUnit:
             Main Goal: {self.main_goal}
             Storage Goal: {self.storage_goal}
 
-            Your task is to process the given content to align it with the main goal and storage goal.
-            Modify the content if necessary and generate relevant tags. Choose tags that are aligned with the main goal.
-            Modify the content so that we extract relevant and concise information based on the main goal and storage goal.
-            Prefer detailed but concise information that is relevant to the main goal and storage goal.
-            
-            {"IMPORTANT: " + self.compress_knowledge if self.compress_knowledge else ""}
+            You have received content that must be processed to meet both the main and storage goals:
+            1. Extract concise and relevant information that best serves the main goal.
+            2. Integrate knowledge from general and prompt-specific spaces to enhance content quality and relevance.
+            3. Modify the content to remove redundancies while retaining key insights.
+            4. Tag the processed content with keywords that align with the core themes of the main goal.
 
+            IMPORTANT: Ensure the processed content is compact yet retains all crucial information for future retrieval and goal alignment.
+            {"IMPORTANT: " + self.compress_knowledge if self.compress_knowledge else ""}
             Output the processed content and a list of tags.
             """,
         )
@@ -110,16 +113,15 @@ class KnowledgeManagementUnit:
             name="PruningAgent",
             role="Analyze feedback and suggest knowledge base modifications",
             function=f"""
-            Main goal: {self.main_goal}
-            Analyze the provided feedback and rewrite the knowledge that has been used to be more relevant for the main goal and storage goal
-            and provide new modified entries that reflect the feedback of the existing knowledge.
-            Your new knowledge, based on feedback can include 
-            1. modifications of the original knowledge 
-            2. Addition of new information to original knowledge
-            3. removal of old knowledge
-            4. Completely new addition of new knowledge
-            It should aim to improve the quality and relevance of the knowledge base.
-            Always club together the similar knowledge and remove the redundant knowledge.
+            Main Goal: {self.main_goal}
+            You are provided with feedback on the existing knowledge:
+            1. Analyze the provided feedback, categorizing it as positive or negative.
+            2. Based on positive feedback, identify knowledge to reinforce and improve (e.g., add supporting details or emphasize key points).
+            3. Based on negative feedback, modify or remove knowledge to better align with the main and storage goals.
+            4. Suggest new knowledge entries where gaps are identified, ensuring these align closely with the existing structure and goals.
+            5. Always club together similar knowledge entries and eliminate redundancy to ensure the knowledge base remains efficient.
+
+            Output your suggestions as a list of new or modified entries.
             
             Output your suggestions as a list of modified/new entries added to the knowledge base.
             {"IMPORTANT: " + self.compress_knowledge if self.compress_knowledge else ""}
