@@ -68,6 +68,8 @@ class KnowledgeManagementUnit:
         Your task is to {agent_type.lower()} knowledge based on these goals."""
 
         user_prompt = f"Given the following information, please {agent_type.lower()} the knowledge appropriately: {kwargs}"
+        if agent_type == "Alignment":
+            system_prompt += "\n\nImportant: add proper search terms and align the knowledge with the goals."
         if compress and agent_type == "Alignment":
             system_prompt += "\n\nImportant: Condense and compress the knowledge to its most essential form and dont be verbose."
 
@@ -132,12 +134,15 @@ class KnowledgeManagementUnit:
 
         return new_ids
 
-    def save(self, knowledge: str, compress=True) -> str:
+    def save(self, knowledge: str, align_knowledge=True, compress=True) -> str:
         with self.lock:
-            # Align knowledge with goals
-            aligned_knowledge = self._prompt_agent(
-                "Alignment", knowledge=knowledge, compress=compress
-            )
+            if align_knowledge:
+                # Align knowledge with goals
+                aligned_knowledge = self._prompt_agent(
+                    "Alignment", knowledge=knowledge, compress=compress
+                )
+            else:
+                aligned_knowledge = knowledge
 
             # Generate a unique ID for the knowledge
             knowledge_id = str(uuid.uuid4())

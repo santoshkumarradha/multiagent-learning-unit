@@ -36,20 +36,22 @@ class ReinforcedCompositeLearnUnit(CompositeLearnUnit):
         storage_goal: Optional[str] = None,
         retrieval_goal: Optional[str] = None,
         compress_knowledge: bool = True,
+        retrieval_memory_count: int = 50,
     ):
         self.llm = llm
         self.main_goal = main_goal
         self.name = name or str(uuid.uuid4())
         self.compress = compress_knowledge
+        self.retrieval_memory_count = retrieval_memory_count
 
         # Set default goals if not provided
         self.storage_goal = (
             storage_goal
-            or f"Store abstract knowledge and strategies that can be applied to a wide range of tasks and problem-solving scenarios to achieve the main goal: {main_goal}. Encourage storing knowledge that can be used in future tasks and not just for the current task."
+            or f"Directly store all the successful and unsuccessful strategies and knowledge that led to the correct and incorrect outcomes, respectively, with the main goal: {main_goal} in mind. do not lose any information."
         )
         self.retrieval_goal = (
             retrieval_goal
-            or f"Retrieve relevant abstract knowledge and strategies that can be applied to the current task or query, based on the main goal: {main_goal}."
+            or f"Retrieve relevant strategies and knowledge that can guide reasoning across various types of tasks with the main goal: {main_goal} in mind."
         )
         self.general_main_goal = (
             general_main_goal
@@ -64,14 +66,16 @@ class ReinforcedCompositeLearnUnit(CompositeLearnUnit):
         self.positive_general_kmu = KnowledgeManagementUnit(
             llm,
             main_goal=self.general_main_goal,
-            storage_goal=self.storage_goal,
+            storage_goal=self.storage_goal
+            + "Store all the successful strategies and knowledge that led to the correct outcome.",
             retrieval_goal=self.retrieval_goal,
             name=f"PositiveGeneralKMU_{self.name}",
         )
         self.negative_general_kmu = KnowledgeManagementUnit(
             llm,
             main_goal=self.general_main_goal,
-            storage_goal=self.storage_goal,
+            storage_goal=self.storage_goal
+            + "Store all the unsuccessful strategies and knowledge that led to the incorrect outcome.",
             retrieval_goal=self.retrieval_goal,
             name=f"NegativeGeneralKMU_{self.name}",
         )
@@ -93,10 +97,26 @@ class ReinforcedCompositeLearnUnit(CompositeLearnUnit):
     def parallel_kmu_retrieval(self, query: str):
         with ThreadPoolExecutor(max_workers=4) as executor:
             futures = [
-                executor.submit(self.positive_general_kmu.retrieve, query, n=10),
-                executor.submit(self.negative_general_kmu.retrieve, query, n=10),
-                executor.submit(self.positive_prompt_kmu.retrieve, query, n=10),
-                executor.submit(self.negative_prompt_kmu.retrieve, query, n=10),
+                executor.submit(
+                    self.positive_general_kmu.retrieve,
+                    query,
+                    n=self.retrieval_memory_count,
+                ),
+                executor.submit(
+                    self.negative_general_kmu.retrieve,
+                    query,
+                    n=self.retrieval_memory_count,
+                ),
+                executor.submit(
+                    self.positive_prompt_kmu.retrieve,
+                    query,
+                    n=self.retrieval_memory_count,
+                ),
+                executor.submit(
+                    self.negative_prompt_kmu.retrieve,
+                    query,
+                    n=self.retrieval_memory_count,
+                ),
             ]
             results = [future.result() for future in futures]
         return results
@@ -135,7 +155,12 @@ class ReinforcedCompositeLearnUnit(CompositeLearnUnit):
 
         # Generate task-specific prompt
         task_prompt = self._prompt_meta_prompt_agent(
-            query, positive_prompt_knowledge, negative_prompt_knowledge, verbose
+            query,
+            positive_general_knowledge,
+            negative_general_knowledge,
+            positive_prompt_knowledge,
+            negative_prompt_knowledge,
+            verbose,
         )
 
         # Combine general knowledge
@@ -251,11 +276,20 @@ class ReinforcedCompositeLearnUnit(CompositeLearnUnit):
         feedback_entries: List[str],
         kmu: KnowledgeManagementUnit,
         verbose: bool = False,
+        align_knowledge=False,
     ):
+        # for now combine all feedback entries into a single entry so that we can retrieve larger feedback entries
+        feedback_entries = [
+            (
+                "|".join(feedback_entries)
+                if len(feedback_entries) > 1
+                else feedback_entries[0] if len(feedback_entries) == 1 else ""
+            )
+        ]
         # Add feedback entries to the KMU
         for entry in feedback_entries:
             if entry.strip():
-                kmu.save(entry, compress=self.compress)
+                kmu.save(entry, compress=self.compress, align_knowledge=align_knowledge)
                 if verbose:
                     console.print(f"Saved feedback to KMU {kmu.name}: {entry}")
 
@@ -323,6 +357,8 @@ Before answering, think step by step and explain the reasoning behind the answer
     def _prompt_meta_prompt_agent(
         self,
         task: str,
+        positive_general_knowledge: List[str],
+        negative_general_knowledge: List[str],
         positive_prompt_knowledge: List[str],
         negative_prompt_knowledge: List[str],
         verbose: bool = False,
@@ -338,9 +374,11 @@ Consider the following:
 
 - Previous successful strategies:
 {positive_prompt_knowledge if positive_prompt_knowledge else 'No positive strategies recorded yet.'}
+{positive_general_knowledge if positive_general_knowledge else 'No positive strategies recorded yet.'}
 
 - Previous unsuccessful strategies (mistakes to avoid):
 {negative_prompt_knowledge if negative_prompt_knowledge else 'No negative strategies recorded yet.'}
+{negative_general_knowledge if negative_general_knowledge else 'No negative strategies recorded yet.'}
 
 Your goal is to learn from past mistakes by avoiding strategies that did not work, and to learn from past successes by leveraging strategies that have worked before.
 
@@ -349,7 +387,8 @@ When creating the prompt:
 - Build upon previous successful strategies to enhance the likelihood of success.
 - Avoid repeating past mistakes by not using unsuccessful strategies.
 - If no relevant past successes or failures are available, explore new approaches.
-- Encourage the Operational Agent to try diverse solutions based on this guidance.
+
+Important: Come up with unique and diverse strategies that have not been tried yet based on this guidance for the Operational Agent to follow.
 
 Ensure that the generated prompt effectively guides the Operational Agent to accomplish the task, learning from the history of what worked and what did not."""
 
@@ -402,7 +441,7 @@ Remember to maintain a history of what worked.
 
 Ensure that your feedback is clear and concise, accurately reflecting the successful attempts to help future reasoning processes replicate these successes.
 
-Provide detailed feedback for both the general knowledge and prompt knowledge, with no more than {max_feedback} feedback items for each."""
+Provide detailed feedback for both the general knowledge and prompt knowledge, with no more than {max_feedback} feedback items for each. If we tried 'n' strategies and 'm' of them worked, provide feedback for 'm' strategies that worked and 'n-m' strategies that did not work, condense the feedback such that we have only one feedback for each strategy that worked and one feedback for each strategy that did not work"""
         else:
             # Negative Feedback Agent
             system_prompt = f"""You are the Negative Feedback Agent in the Composite Learning Unit.
@@ -413,14 +452,15 @@ Your task is to act as a memory of past mistakes. Record what was tried, that it
 Please provide:
 
 - A summary of the strategies and knowledge that did not work.
-- Potential reasons why they failed.
+- Potential reasons why they failed. (if you are not sure, just provide a summary of the unsuccessful strategies)
 
 Do not provide suggestions for improvement or how to avoid these issues. Your role is to maintain a history of what did not work.
 
 Ensure that your feedback is clear and concise, accurately reflecting the unsuccessful attempts to help future reasoning processes avoid repeating these mistakes.
 Note if the strategy is correct but the execution is wrong, provide feedback on the execution.
 
-Provide detailed feedback for both the general knowledge and prompt knowledge, with no more than {max_feedback} feedback items for each."""
+Provide detailed feedback for both the general knowledge and prompt knowledge, with no more than {max_feedback} feedback items for each.
+If we tried 'n' strategies and 'm' of them worked, provide feedback for 'm' strategies that worked and 'n-m' strategies that did not work, condense the feedback such that we have only one feedback for each strategy that worked and one feedback for each strategy that did not work."""
 
         user_prompt = f"""Query: {query}
 Generated Output: {generated_output}
@@ -429,6 +469,7 @@ Comparison Explanation: {comparison_explanation}
 General Knowledge Used: {general_knowledge_used if general_knowledge_used else 'None'}
 Prompt Knowledge Used: {task_prompt if task_prompt else 'None'}
 
+Always prefer to condense multiple feedback items into a single feedback item if they are related and can be summarized effectively.
 Provide the requested feedback:"""
 
         class FeedbackAgentOutput(BaseModel):
