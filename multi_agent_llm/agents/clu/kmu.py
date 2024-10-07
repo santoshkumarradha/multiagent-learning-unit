@@ -10,6 +10,7 @@ from chromadb.utils import embedding_functions
 from pydantic import BaseModel, Field
 from rich.console import Console
 from rich.table import Table
+from tqdm import tqdm
 
 console = Console()
 
@@ -86,7 +87,11 @@ class KnowledgeManagementUnit:
         return result.response
 
     def replace_knowledge(
-        self, old_ids: List[str], new_knowledge: List[str], compress: bool = True
+        self,
+        old_ids: List[str],
+        new_knowledge: List[str],
+        compress: bool = True,
+        verbose=False,
     ) -> List[str]:
         with self.lock:
             # Remove old entries
@@ -104,12 +109,26 @@ class KnowledgeManagementUnit:
             }
 
             # Collect results as they complete
-            for future in as_completed(future_to_entry):
-                try:
-                    new_id = future.result()
-                    new_ids.append(new_id)
-                except Exception as e:
-                    print(f"An error occurred while saving an entry: {e}")
+            if verbose:
+                with tqdm(
+                    total=len(future_to_entry),
+                    desc=f"Saving new entries for {self.name}",
+                ) as pbar:
+                    for future in as_completed(future_to_entry):
+                        try:
+                            new_id = future.result()
+                            new_ids.append(new_id)
+                        except Exception as e:
+                            print(f"An error occurred while saving an entry: {e}")
+                        finally:
+                            pbar.update(1)
+            else:
+                for future in as_completed(future_to_entry):
+                    try:
+                        new_id = future.result()
+                        new_ids.append(new_id)
+                    except Exception as e:
+                        print(f"An error occurred while saving an entry: {e}")
 
         return new_ids
 

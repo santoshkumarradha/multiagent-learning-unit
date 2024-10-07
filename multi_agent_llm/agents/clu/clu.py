@@ -255,32 +255,82 @@ class CompositeLearnUnit:
         general_knowledge: str,
         prompt_knowledge: str,
         verbose: bool = False,
+        max_feedback: int = 5,
     ) -> Dict[str, str]:
         agent_type = "Positive" if is_positive else "Negative"
 
         if is_positive:
             system_prompt = f"""You are the Positive Feedback Agent in the Composite Learning Unit.
             Main Goal: {main_goal}
-            Your task is to provide specific, targeted feedback to reinforce and improve the CLU's performance.
-            Focus on two aspects:
-            1. Identify and explain which elements of the general knowledge base contributed to the successful outcome.
-            2. Analyze how the prompt knowledge effectively guided the reasoning process.
-            3. Identify key elements in the reasoning that led to the correct answer
-            4. Suggest how this success can be replicated in future tasks
-            Provide constructive feedback that encourages building upon this success for future tasks."""
+            Begin by enclosing all thoughts within <thinking> tags, focusing on identifying the positive elements of the knowledge base that led to the successful outcome. Explore multiple perspectives to understand the strengths of the current approach.
+
+            Break down your positive feedback into clear, reinforcing actions within <step> tags. Start with a 20-step budget, focusing on:
+
+            Identifying and explaining which elements of the general knowledge base contributed to the successful outcome.
+            Analyzing how the prompt knowledge effectively guided the reasoning process.
+            Identifying key elements in the reasoning that led to the correct answer.
+            Suggesting how this success can be replicated in future tasks.
+            Use <count> tags after each step to indicate the remaining feedback budget, stopping when it reaches 0. Continuously adapt your feedback based on reflections to maximize the reinforcement of successful strategies.
+
+            Regularly evaluate your reinforcement strategy using <reflection> tags. Be critical and honest about what worked and why. Assign a quality score between 0.0 and 1.0 using <reward> tags after each reflection:
+
+            0.8+: Continue reinforcing the current approach.
+            0.5-0.7: Consider enhancing some elements to strengthen future performance.
+            Below 0.5: Re-evaluate the strengths identified and explore different ways to replicate success.
+            If unsure or if the reward score is low, adjust your feedback to enhance understanding and explain your revised approach within <thinking> tags.
+
+            For each successful element identified, enclose your findings within <success> tags, clearly specifying the contributing factors. Provide actionable suggestions for leveraging these elements in future tasks within <strategy> tags to ensure consistency and improvement.
+
+            If there are multiple strengths or positive aspects worth exploring further, outline each of them individually within <thinking> tags, comparing their relative impact on the successful outcome in <reflection> tags to understand their importance and contribution.
+
+            Continuously aim to provide constructive feedback that encourages:
+
+            Building upon the identified successes.
+            Reinforcing effective components of the reasoning process.
+            Replicating the strategies that led to the correct answer in future scenarios.
+            Synthesize the overall positive feedback within <summary> tags, summarizing key strengths, their impact, and actionable recommendations for future success.
+
+            Conclude with a final reflection within <final_reflection> tags, discussing the key elements of the success, how they can be consistently applied, and areas for potential enhancement. Assign a final reward score based on the overall reinforcement process.
+            
+            **IMPORTATNT:** Do all these with the main goal in mind: {main_goal}.
+            Give a detailed list of no more than {max_feedback} feedback each for improving general knowledge and prompt knowledge."""
         else:
             system_prompt = f"""You are the Negative Feedback Agent in the Composite Learning Unit.
             Main Goal: {main_goal}
-            Your task is to provide specific, targeted feedback to correct and improve the CLU's performance.
-            Focus on two aspects:
-            1. Identify gaps or inaccuracies in the general knowledge base that led to the incorrect outcome.
-            2. Analyze how the knowledge may have misguided the reasoning process.
-            3.  Evaluate why the response does not match the expected output
-            4.  Identify gaps in knowledge or reasoning that led to the incorrect answer
-            5.  Suggest specific changes and improvements to the knowledge base
-            6.  Provide strategies to avoid similar mistakes in the future
-            7. Identify key elements in the reasoning that led to the incorrect answer
-            Provide constructive feedback that addresses these issues and suggests concrete improvements and changes."""
+            
+            Begin by enclosing all thoughts within <thinking> tags, focusing on identifying gaps and inaccuracies in the knowledge base that led to the incorrect outcome. Explore multiple perspectives to thoroughly assess the issue.
+
+            Break down your feedback into clear corrective actions within <step> tags. Start with a 20-step budget, focusing on:
+
+            Identifying gaps or inaccuracies in the knowledge bases.
+            Analyzing how the knowledge may have misguided the reasoning process.
+            Evaluating why the response does not match the expected outcome.
+            Identifying key elements in the reasoning that led to the incorrect answer.
+            Suggesting specific changes and improvements to the knowledge base.
+            Providing strategies to avoid similar mistakes in the future.
+            After each step, use <count> tags to indicate the remaining feedback budget, stopping when reaching 0. Adjust your strategy continuously based on intermediate reflections, adapting your feedback to address newly identified issues or potential corrections.
+
+            Regularly evaluate your corrective approach using <reflection> tags. Be critical and honest about the effectiveness of each corrective action. Assign a quality score between 0.0 and 1.0 using <reward> tags after each reflection:
+
+            0.8+: Continue the current corrective approach.
+            0.5-0.7: Consider minor adjustments to the feedback or strategy.
+            Below 0.5: Seriously consider backtracking and trying a different corrective approach.
+            If unsure or if the reward score is low, backtrack and try a different feedback strategy, explaining your reasoning and new direction within <thinking> tags.
+
+            For each identified gap or issue, clearly enclose your findings within <gap> tags. Suggest potential changes or additions to the knowledge base within <strategy> tags, ensuring your recommendations are specific and actionable.
+
+            If multiple feedback strategies are viable, explore each one individually, comparing their effectiveness within <reflection> tags to decide the best corrective course. Use <thinking> tags as a scratchpad to outline alternative approaches for addressing gaps in the knowledge or reasoning.
+
+            Continuously aim to provide constructive and diverse feedback that targets specific aspects, including:
+
+            Concrete improvements to the knowledge base.
+            Strategies to prevent similar mistakes in future iterations.
+            Key elements of the reasoning that need to be corrected.
+            Synthesize all your feedback into a concise summary within <summary> tags, including the main corrective points and the rationale behind suggested improvements.
+
+            Conclude with a final reflection within <final_reflection> tags, discussing the effectiveness of the corrective process, challenges faced, and how the feedback provided might impact future performance. Assign a final reward score to the overall feedback process.
+            **IMPORTATNT:** Do all these with the main goal in mind: {main_goal}.
+            Give a detailed list of no more than {max_feedback} feedback each for improving general knowledge and prompt knowledge."""
 
         user_prompt = f"""Query: {query}
         Generated Output: {generated_output}
@@ -291,10 +341,13 @@ class CompositeLearnUnit:
         Provide detailed, through and targeted feedback for improving general knowledge and prompt knowledge:"""
 
         class FeedbackAgentOutput(BaseModel):
-            general_knowledge_feedback: str = Field(
+            thinking_process: str = Field(
+                ..., description="Thinking process of the agent"
+            )
+            general_knowledge_feedback: List[str] = Field(
                 ..., description="Feedback for improving the general knowledge base"
             )
-            prompt_knowledge_feedback: str = Field(
+            prompt_knowledge_feedback: List[str] = Field(
                 ..., description="Feedback for improving the prompt knowledge"
             )
 
@@ -311,6 +364,7 @@ class CompositeLearnUnit:
             )
 
         return {
+            "thinking_process": result.thinking_process,
             "general_knowledge_feedback": result.general_knowledge_feedback,
             "prompt_knowledge_feedback": result.prompt_knowledge_feedback,
         }
@@ -360,7 +414,8 @@ class CompositeLearnUnit:
             general_future = executor.submit(
                 self._align_and_save_knowledge,
                 "general",
-                feedback["general_knowledge_feedback"],
+                f"Thinking process : {feedback['thinking_process']}"
+                + str(feedback["general_knowledge_feedback"]),
                 general_knowledge_used,
                 x,
                 verbose,
@@ -368,7 +423,8 @@ class CompositeLearnUnit:
             prompt_future = executor.submit(
                 self._align_and_save_knowledge,
                 "prompt",
-                feedback["prompt_knowledge_feedback"],
+                f"Thinking process : {feedback['thinking_process']}"
+                + str(feedback["prompt_knowledge_feedback"]),
                 prompt_knowledge_used,
                 x,
                 verbose,
@@ -397,6 +453,7 @@ class CompositeLearnUnit:
         query: str,
         main_goal: str,
         verbose: bool = False,
+        max_knowldge: int = 5,
     ) -> List[str]:
         system_prompt = f"""You are the Knowledge Alignment Agent for {knowledge_type} knowledge in the Composite Learning Unit.
         Main Goal: {main_goal}
@@ -410,8 +467,39 @@ class CompositeLearnUnit:
         6. Favour adding targeted short and relevant knowledge entries over long and verbose entries.
         7. Never memorize the tasks, only extract and save the general and relevant information that can be used in future tasks.
         8. If something methods are tired and is wrong or did not work, always keep the record of that and do not repeat the same mistake again.
+        Begin by processing all feedback within <thinking> tags, focusing on extracting, refining, and aligning the knowledge to support the {main_goal} effectively. Carefully consider how feedback and existing knowledge entries relate to each other and how modifications will meet the requirements of {knowledge_type} knowledge.
+
+        Break down your task into clear knowledge alignment steps within <step> tags. Start with a 20-step budget, focusing on:
+
+        Identifying existing knowledge entries that need modification based on the feedback. Include these as modified versions in the new knowledge list.
+        Extracting new knowledge entries that are necessary to fill gaps identified in the feedback. Highlight these entries for addition.
+        Evaluating existing knowledge entries to determine which are still relevant and accurate.
+        Excluding knowledge entries that no longer serve their purpose or have become outdated based on the feedback.
+        After each step, use <count> tags to show the remaining budget, stopping once it reaches 0. Continuously adjust your strategy based on reflections as you proceed.
+
+        Regularly evaluate your knowledge alignment process using <reflection> tags. Be critical and honest about the quality and completeness of the extracted knowledge. Assign a quality score between 0.0 and 1.0 using <reward> tags after each reflection:
+
+        0.8+: Continue with the current knowledge alignment strategy.
+        0.5-0.7: Consider minor adjustments to improve coverage or clarity.
+        Below 0.5: Seriously reconsider your approach to extracting and modifying knowledge, and explain the revised approach within <thinking> tags.
+        If unsure or if the reward score is low, backtrack and try a different alignment strategy, elaborating on the new adjustments within <thinking> tags.
+
+        For each modified or newly added knowledge entry, use <entry> tags to clearly mark the content. Ensure that each entry is short, relevant, and targeted, rather than verbose. Focus on maintaining comprehensive yet concise knowledge coverage to meet the main goal.
+
+        After analyzing existing knowledge, use <retain> tags to list entries that remain valid and useful, and use <exclude> tags to indicate those that should be discarded.
+
+        Throughout your process, collect a diverse set of knowledge entries to ensure comprehensive coverage of {knowledge_type} knowledge relevant to achieving the {main_goal}. Avoid memorizing tasks; instead, focus on saving general and relevant information that can be used for future tasks, using <save> tags for storing this key information.
+
+        For any method that proved incorrect or ineffective, clearly note this using <do_not_repeat> tags to avoid making the same mistake again in future tasks.
+
+        When all modifications, additions, and exclusions are complete, synthesize the final comprehensive list within <summary> tags. Ensure that the new knowledge base is complete, up-to-date, and aligned to meet all aspects of the main goal.
+
+        Conclude with a final reflection within <final_reflection> tags, discussing the completeness and accuracy of the aligned knowledge, the challenges faced, and any considerations for maintaining or improving the knowledge base in future tasks. Assign a final reward score to evaluate the entire knowledge alignment process
         
-        Remember, the list you provide will completely replace the existing knowledge, so ensure it is comprehensive and addresses all aspects of the {knowledge_type} knowledge needed to achieve the main goal."""
+        Remember, the list you provide will completely replace the existing knowledge, so ensure it is comprehensive and addresses all aspects of the {knowledge_type} knowledge needed to achieve the main goal.
+        
+        **IMPORTANT** : After this based on your reasoning, give back a list of new knowledge entries that will replace the existing knowledge base. Give no more than {max_knowldge} new knowledge entries, combine the new knowledge entries without leaving any details to make the list of {max_knowldge} entries.
+        """
 
         user_prompt = f"""Query: {query}
         Existing {knowledge_type} Knowledge: {existing_knowledge}
@@ -419,9 +507,12 @@ class CompositeLearnUnit:
         Generate a comprehensive list of knowledge entries that will replace the existing {knowledge_type} knowledge base:"""
 
         class KnowledgeAlignmentOutput(BaseModel):
+            thinking_process: str = Field(
+                ..., description="Thinking process of the agent"
+            )
             new_knowledge: List[str] = Field(
                 ...,
-                description=f"Comprehensive list of {knowledge_type} knowledge entries to replace the existing knowledge base",
+                description=f"Final list of {knowledge_type} knowledge entries to replace the existing knowledge base",
             )
 
         query = self.llm.format_prompt(
@@ -460,7 +551,7 @@ class CompositeLearnUnit:
 
         # Replace the existing knowledge with the new entries
         saved_ids = kmu.replace_knowledge(
-            existing_ids, new_knowledge_entries, compress=self.compress
+            existing_ids, new_knowledge_entries, compress=self.compress, verbose=verbose
         )
 
         return saved_ids
