@@ -2,7 +2,7 @@ import random
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from threading import Lock
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional, Type
 
 from pydantic import BaseModel, Field
 from rich import print
@@ -130,7 +130,7 @@ class CLU:
         role: str,
         function: str,
         user_prompt: str,
-        response_model: BaseModel,
+        response_model: Type[BaseModel],
     ):
         system_prompt = f"""
         You are: {name}
@@ -160,14 +160,14 @@ class CLU:
 
         return result
 
-    def create_operational_agent(self, prompt):
+    def create_operational_agent(self, prompt, response_schema=None):
         if self.custom_analysis_agent is None:
             self.operational_agent = lambda input: self._generate_response(
                 name="OperationalAgent",
                 role="Execute tasks based on the provided prompt",
                 function=prompt,
                 user_prompt=input,
-                response_model=OperationalAgentOutput,
+                response_model=response_schema or OperationalAgentOutput,
             )
         else:
             self.operational_agent = lambda input: self.custom_analysis_agent(
@@ -195,8 +195,6 @@ class CLU:
             3. Specific instructions to help solve the current task or work on it better with the main goal in mind based on relevant knowledge.
             4. Relevant knowledge to consider (if available), both positive and negative
             5. Use latest prompting techniques and strategies to generate the best prompt like Chain of thought prompts (asking to think step by step) etc., or more novel and innovative strategies based on the task at hand
-
-            { "IMPORTANT: You are now in exploration phase, so ignore above instructions and the prompt you generate should try out a completely new approach that is not present in our knowledge base at all." if random.random() < self.exploration_rate else "" }
             """,
             user_prompt=input,
             response_model=PromptGenerationOutput,
@@ -336,22 +334,22 @@ class CLU:
 
     def _get_feedback(
         self,
-        oa_response: OperationalAgentOutput,
+        oa_response: Any,
         expected_output: Optional[str],
         oa_prompt: Optional[str],
         knowledge: Optional[str],
         task: str,
     ) -> FeedbackOutput:
+        oa_response_str = str(oa_response)
         if expected_output is not None and expected_output != "":
             comparison_result = self.response_comparison_agent(
-                f"Compare Response: <{oa_response.response}>\n to Expected Output: <{expected_output}>\n for the Task: {task}",
+                f"Compare Response: <{oa_response_str}>\n to Expected Output: <{expected_output}>\n for the Task: {task}",
             )
             feedback_input = f"""
             Overall Goal: {self.main_role}
             Task: {task}
-            Agent Response: {oa_response.response}
-            Agent Reasoning: {oa_response.reasoning}
-            Agent Confidence: {oa_response.confidence}
+            Agent Response: {oa_response_str}
+            Agent Confidence: {getattr(oa_response, 'confidence', 'N/A')}
             Expected Output: {expected_output}
             Is Correct: {comparison_result.is_correct}
             Knowledge: {knowledge}
@@ -371,14 +369,14 @@ class CLU:
             feedback_input = f"""
             Overall Goal: {self.main_role}
             Task: {task}
-            Agent Response: {oa_response.response}
-            Agent Reasoning: {oa_response.reasoning}
-            Agent Confidence: {oa_response.confidence}
+            Agent Response: {oa_response_str}
+            Agent Confidence: {getattr(oa_response, 'confidence', 'N/A')}
             """
             feedback = self.general_feedback_agent(
                 feedback_input,
             )
-        return feedback, comparison_result.is_correct if expected_output else None
+            comparison_result = None
+        return feedback, comparison_result.is_correct if comparison_result else None
 
     def prune_knowledge_bases(self):
         for entry in self.pruning_queue:
@@ -400,11 +398,24 @@ class CLU:
                 executor.submit(prune_mistake_kmu)
         self.pruning_queue = []
 
-    def inference(self, task: str, **kwargs):
-        # Retrieve relevant positive knowledge
-        learning_knowledge = self.learning_kmu.retrieve_knowledge(
-            task, n_results=self.retrival_limit
-        )
+    def inference(
+        self, task: str, response_schema: Optional[Type[BaseModel]] = None, **kwargs
+    ):
+        print(f"inference schema: {response_schema}")
+        # Retrieve knowledge in parallel
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            future_learning = executor.submit(
+                self.learning_kmu.retrieve_knowledge,
+                task,
+                n_results=self.retrival_limit,
+            )
+            future_mistake = executor.submit(
+                self.mistake_kmu.retrieve_knowledge, task, n_results=self.retrival_limit
+            )
+            learning_knowledge = future_learning.result()
+            mistake_knowledge = future_mistake.result()
+
+        # Process learning knowledge
         learning_knowledge_str = (
             " ".join(
                 [
@@ -417,10 +428,7 @@ class CLU:
             else "No relevant positive knowledge found."
         )
 
-        # Retrieve relevant negative knowledge
-        mistake_knowledge = self.mistake_kmu.retrieve_knowledge(
-            task, n_results=self.retrival_limit
-        )
+        # Process mistake knowledge
         mistake_knowledge_str = (
             " ".join(
                 [
@@ -432,6 +440,13 @@ class CLU:
             if mistake_knowledge["documents"]
             else "No relevant negative knowledge found."
         )
+        explore = random.random() < self.exploration_rate and kwargs.get(
+            "training", False
+        )
+        if explore and self.verbose:
+            print(
+                "Exploration phase: Ignoring knowledge base for prompt generation and task execution."
+            )
 
         # Generate prompt using Meta-Prompt Agent
         prompt_input = f"""
@@ -439,11 +454,13 @@ class CLU:
         Task: {task}
         Relevant Positive Knowledge that we have learnt and works (Positive knowledge), the success we had: {learning_knowledge_str}
         Relevant Negative Knowledge we know that has failed (Negative knowledge), the mistakes we made: {mistake_knowledge_str}
+        
+        { "IMPORTANT: You are now in exploration phase, so ignore above instructions. The prompt you generate should try out a completely new approach that is not present in our knowledge base at all." if explore else "" }
         """
         generated_prompt = self.meta_prompt_agent(prompt_input)
 
         # Create or update Operational Agent with the generated prompt
-        self.create_operational_agent(generated_prompt)
+        self.create_operational_agent(generated_prompt.prompt, response_schema)
 
         # Prepare knowledge input for operational agent
         oa_input = f"""
@@ -457,10 +474,8 @@ class CLU:
         oa_response = self.operational_agent(oa_input)
 
         return {
-            "response": oa_response.response,
-            "reasoning": oa_response.reasoning,
-            "confidence": oa_response.confidence,
-            "generated_prompt": generated_prompt,
+            "response": oa_response,
+            "generated_prompt": generated_prompt.prompt,
             "learning_knowledge_str": learning_knowledge_str,
             "mistake_knowledge_str": mistake_knowledge_str,
             "learning_knowledge": learning_knowledge,
@@ -472,15 +487,14 @@ class CLU:
         task: str,
         expected_output: Optional[str] = None,
         prune_after=1,
+        response_schema: Optional[Type[BaseModel]] = None,
         **kwargs,
     ):
         # First perform inference
-        inference_result = self.inference(task, **kwargs)
-        oa_response = OperationalAgentOutput(
-            response=inference_result["response"],
-            reasoning=inference_result["reasoning"],
-            confidence=inference_result["confidence"],
+        inference_result = self.inference(
+            task, response_schema=response_schema, training=True, **kwargs
         )
+        oa_response = inference_result["response"]
 
         right_answer = None
         feedback, right_answer = self._get_feedback(
@@ -493,60 +507,44 @@ class CLU:
 
         # Extract knowledge insights
         knowledge_update = self.knowledge_insight_agent(
-            f"Overall Goal: {self.main_role}\nAnalyze feedback: {feedback}\nTask: {task}\nResponse: {oa_response.response}\nReasoning: {oa_response.reasoning}\nPrompt generated using Knowledge: {inference_result['generated_prompt']}",
+            f"Overall Goal: {self.main_role}\nAnalyze feedback: {feedback}\nTask: {task}\nResponse: {str(oa_response)}\nPrompt generated using Knowledge: {inference_result['generated_prompt']}",
         )
 
-        if knowledge_update.positive_knowledge:
-
-            def save_positive_knowledge(knowledge):
-                with Lock():
-                    self.learning_kmu.save_knowledge(knowledge)
-
-            with ThreadPoolExecutor(max_workers=4) as executor:
+        # Save knowledge updates in parallel
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            if knowledge_update.positive_knowledge:
                 executor.map(
-                    save_positive_knowledge, knowledge_update.positive_knowledge
+                    self.learning_kmu.save_knowledge,
+                    knowledge_update.positive_knowledge,
                 )
-
-        if knowledge_update.negative_knowledge:
-
-            def save_negative_knowledge(knowledge):
-                with Lock():
-                    self.mistake_kmu.save_knowledge(knowledge)
-
-            with ThreadPoolExecutor(max_workers=4) as executor:
+            if knowledge_update.negative_knowledge:
                 executor.map(
-                    save_negative_knowledge, knowledge_update.negative_knowledge
+                    self.mistake_kmu.save_knowledge, knowledge_update.negative_knowledge
                 )
 
         # Flatten and check IDs
         learning_ids = inference_result["learning_knowledge"].get("ids", [])
         mistake_ids = inference_result["mistake_knowledge"].get("ids", [])
 
-        if learning_ids and mistake_ids:
-            flattened_learning_ids = [
-                item for sublist in learning_ids for item in sublist
-            ]
-            flattened_mistake_ids = [
-                item for sublist in mistake_ids for item in sublist
-            ]
-            if (
-                self.training_iterations % prune_after == 0
-            ):  # Control the pruning frequency
-                if flattened_learning_ids and flattened_mistake_ids:
-                    full_feedback_input = f"""
-                    Overall Goal: {self.main_role}
-                    Task: {task}
-                    Agent Response: {oa_response.response}
-                    Expected Output: {expected_output}
-                    Feedback for the agent's response: {feedback.feedback}
-                    """
-                    self.pruning_queue.append(
-                        {
-                            "feedback": full_feedback_input,
-                            "learning_ids": flattened_learning_ids,
-                            "mistake_ids": flattened_mistake_ids,
-                        }
-                    )
+        flattened_learning_ids = [item for sublist in learning_ids for item in sublist]
+        flattened_mistake_ids = [item for sublist in mistake_ids for item in sublist]
+
+        if self.training_iterations % prune_after == 0:  # Control the pruning frequency
+            if flattened_learning_ids or flattened_mistake_ids:
+                full_feedback_input = f"""
+                Overall Goal: {self.main_role}
+                Task: {task}
+                Agent Response: {str(oa_response)}
+                Expected Output: {expected_output}
+                Feedback for the agent's response: {feedback.feedback}
+                """
+                self.pruning_queue.append(
+                    {
+                        "feedback": full_feedback_input,
+                        "learning_ids": flattened_learning_ids,
+                        "mistake_ids": flattened_mistake_ids,
+                    }
+                )
 
         # Prune if necessary
         if len(self.pruning_queue) >= self.pruning_queue_size:
@@ -554,9 +552,7 @@ class CLU:
 
         self.training_iterations += 1
         return {
-            "response": oa_response.response,
-            "reasoning": oa_response.reasoning,
-            "confidence": oa_response.confidence,
+            "response": oa_response,
             "feedback": feedback.dict(),
             "knowledge_update": {
                 "positive": knowledge_update.positive_knowledge,
