@@ -11,6 +11,7 @@ from rich.panel import Panel
 from rich.theme import Theme
 
 from .kmu import KMU
+from .oa import DefaultOperationalAgent, OperationalAgent
 
 custom_theme = Theme(
     {
@@ -73,6 +74,7 @@ class CLU:
     def __init__(
         self,
         main_role,
+        operational_agent: OperationalAgent = None,
         pruning_queue_size=1,
         compress_knowledge=True,
         collection_name=None,
@@ -87,6 +89,9 @@ class CLU:
         self.retrival_limit = retrival_limit
         self.verbose = verbose
         self.llm = llm
+        self.operational_agent = operational_agent or DefaultOperationalAgent(
+            llm=llm, verbose=verbose
+        )
 
         learning_collection_name = (
             f"{collection_name}_learning" if collection_name else None
@@ -115,7 +120,6 @@ class CLU:
             llm=llm,
         )
 
-        self.operational_agent = None
         self.pruning_queue = []
         self.exploration_rate = exploration_rate
         self.training_iterations = 0
@@ -159,20 +163,6 @@ class CLU:
             )
 
         return result
-
-    def create_operational_agent(self, prompt, response_schema=None):
-        if self.custom_analysis_agent is None:
-            self.operational_agent = lambda input: self._generate_response(
-                name="OperationalAgent",
-                role="Execute tasks based on the provided prompt",
-                function=prompt,
-                user_prompt=input,
-                response_model=response_schema or OperationalAgentOutput,
-            )
-        else:
-            self.operational_agent = lambda input: self.custom_analysis_agent(
-                prompt, input
-            )
 
     def initialize_agents(self):
         class PromptGenerationOutput(BaseModel):
@@ -477,9 +467,6 @@ class CLU:
         """
         generated_prompt = self.meta_prompt_agent(prompt_input)
 
-        # Create or update Operational Agent with the generated prompt
-        self.create_operational_agent(generated_prompt.prompt, response_schema)
-
         # Prepare knowledge input for operational agent
         oa_input = f"""
         Task: {task}
@@ -489,7 +476,11 @@ class CLU:
         Use the above relevant knowledge to inform your response. If no relevant knowledge is provided, rely on your general understanding.
         """
         # Execute task with relevant knowledge
-        oa_response = self.operational_agent(oa_input)
+        oa_response = self.operational_agent.generate_response(
+            prompt=generated_prompt.prompt,
+            task=oa_input,
+            response_schema=response_schema or OperationalAgentOutput,
+        )
 
         return {
             "response": oa_response,
@@ -525,7 +516,7 @@ class CLU:
 
         # Extract knowledge insights
         knowledge_update = self.knowledge_insight_agent(
-            f"Overall Goal: {self.main_role}\nAnalyze feedback: {feedback}\nTask: {task}\nResponse: {str(oa_response)}\nPrompt generated using Knowledge: {inference_result['generated_prompt']}",
+            f"Overall Goal: {self.main_role}\nAnalyze feedback: {feedback}\nTask: {task}\nResponse: {str(oa_response)}\nPrompt generated using Knowledge: {inference_result['generated_prompt']}. Based on the overall goal, extract knowledge insights from this data to be stored in the knowledge base for future use.",
         )
 
         # Save knowledge updates in parallel
