@@ -2,9 +2,10 @@ import uuid
 from threading import Lock
 from typing import Dict, List, Optional
 
-from agents import Agent
 from pydantic import BaseModel, Field
 from rich.console import Console
+
+from agents import Agent
 
 from .knowldge import KnowledgeManagementSystem
 
