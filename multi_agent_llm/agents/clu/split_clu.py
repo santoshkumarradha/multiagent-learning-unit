@@ -340,6 +340,7 @@ class CLU:
             - Provide clear lists of positive and negative knowledge to be added to the respective databases.
             - The lists should be diverse and each element should be unique and contain new knowledge to be added.
             - These lists may include concepts, ideas, principles, and guidelines for optimal performance or avoidance of mistakes.
+            - If there is no new knowledge either positive or negative, then return empty list and dont repeat the same knowledge that is already there in the knowledge base.
             
             Make sure you do all of this with the main goal in mind and align your knowledge gathering with the main goal.
             Main Goal : {self.main_role}
