@@ -1,617 +1,713 @@
-import threading
 import uuid
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Any, Dict, List, Optional, Tuple
+from concurrent.futures import ThreadPoolExecutor
+from threading import Lock
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field
-from rich.color import Color
+from rich import print
 from rich.console import Console
+from rich.layout import Layout
+from rich.markdown import Markdown
 from rich.panel import Panel
-from rich.style import Style
-from rich.table import Table
+from rich.syntax import Syntax
+from rich.text import Text
 from rich.theme import Theme
 
-my_theme = Theme(
+from .kmu import KMU
+
+custom_theme = Theme(
     {
-        "info": Style(color=Color.from_rgb(50, 150, 200)),
-        "warning": Style(color=Color.from_rgb(200, 150, 50)),
-        "error": Style(color=Color.from_rgb(200, 50, 50)),
-        "highlight": Style(color=Color.from_rgb(100, 200, 100)),
+        "agent_name": "bold cyan",
+        "task": "green",
+        "response": "yellow",
     }
 )
 
-console = Console(theme=my_theme)
+console = Console(
+    theme=custom_theme, width=80
+)  # Set a fixed width for consistent formatting
 
-from .kmu import KnowledgeManagementUnit
+
+def format_agent_output(name: str, task: str, response: str):
+    agent_info = f"[agent_name]{name}[/agent_name]\n"
+    task_section = "[task]Task:[/task]\n" + task + "\n"
+    response_section = "[response]Response:[/response]\n" + response
+
+    full_content = agent_info + task_section + response_section
+    return full_content
 
 
-class CompositeLearnUnit:
+verbosity = False
+disable_logging = True
+
+
+## -- utility functions ---
+def print_cond(text, verbose=verbosity):
+    if verbose:
+        print(text)
+
+
+def generate_short_uuid(length=8):
+    short_uuid = str(uuid.uuid4()).replace("-", "")[:length]
+    return short_uuid
+
+
+# pydantic models ---
+class FeedbackOutput(BaseModel):
+    feedback: str = Field(..., description="Detailed feedback on the response")
+    improvement_suggestions: List[str] = Field(
+        ..., description="Suggestions for improvement"
+    )
+    knowledge_gaps: List[str] = Field(..., description="Identified knowledge gaps")
+
+
+class OperationalAgentOutput(BaseModel):
+    reasoning: str = Field(..., description="Detailed reasoning behind the response")
+    response: str = Field(
+        ..., description="Concise response from the Operational Agent"
+    )
+    confidence: float = Field(
+        ...,
+        description="Confidence in the response between 0 and 1, with 1 being highest confidence",
+    )
+
+
+class CLU:
     def __init__(
         self,
-        llm,
-        main_goal: str,
-        name: Optional[str] = None,
-        general_main_goal: Optional[str] = None,
-        prompt_main_goal: Optional[str] = None,
-        storage_goal: Optional[str] = None,
-        retrieval_goal: Optional[str] = None,
-        compress_knowledge: bool = True,
+        main_role,
+        pruning_queue_size=1,
+        compress_knowledge=True,
+        collection_name=None,
+        retrival_limit=10,
+        llm=None,
+        verbose=False,
     ):
+        self.main_role = main_role
+        self.clu_id = generate_short_uuid(5)
+        self.pruning_queue_size = pruning_queue_size
+        self.retrival_limit = retrival_limit
+        self.verbose = verbose
         self.llm = llm
-        self.main_goal = main_goal
-        self.name = name
-        self.compress = compress_knowledge
 
-        # Set default goals if not provided
-        self.storage_goal = (
-            storage_goal
-            or f"Store abstract knowledge and strategies that can be applied to a wide range of tasks and problem-solving scenarios do the main goal - Main goal: {main_goal} in the best way possible. Encourage storing knowledge that can be used in future tasks and not just for the current task."
+        general_collection_name = (
+            f"{collection_name}_general" if collection_name else None
         )
-        self.retrieval_goal = (
-            retrieval_goal
-            or f"Retrieve relevant abstract knowledge and strategies that can be applied to the current task or query.based on the main role - Main goal: {main_goal}"
-        )
-        self.general_main_goal = (
-            general_main_goal
-            or f"Develop and maintain a versatile knowledge base of abstract concepts, patterns, and problem-solving approaches with the main goal: {main_goal} in mind."
-        )
-        self.prompt_main_goal = (
-            prompt_main_goal
-            or "Refine strategies for generating effective prompts that can guide reasoning across various types of tasks.Extract relevant information needed to construct high-quality prompts based on the feedback from answering specific task-related query with a given old prompt. - Main goal:  {main_goal}"
+        prompt_collection_name = (
+            f"{collection_name}_prompt" if collection_name else None
         )
 
-        self.general_kmu = KnowledgeManagementUnit(
-            llm,
-            main_goal=self.general_main_goal,
-            storage_goal=self.storage_goal,
-            retrieval_goal=self.retrieval_goal,
-            name=(
-                "GeneralKMU_" + self.name
-                if self.name is not None
-                else "GeneralKMU_{name}".format(name=str(uuid.uuid4()))
-            ),
-        )
-        self.prompt_kmu = KnowledgeManagementUnit(
-            llm,
-            main_goal=self.prompt_main_goal,
-            storage_goal=self.storage_goal,
-            retrieval_goal=self.retrieval_goal,
-            name=(
-                "PromptKMU_" + self.name
-                if self.name is not None
-                else "PromptKMU_{name}".format(name=str(uuid.uuid4()))
-            ),
+        self.general_kmu = KMU(
+            main_goal=f"Extract relevant information that can be inferred from the task-specific feedback from the feedback agent to do the main goal better- Main goal: {main_role}",
+            storage_goal=f"Store general knowledge needed by agents to do the main role - Main goal: {main_role} in the best way possible. Encourage storing knowledge that can be used in future tasks and not just for the current task.",
+            retrieval_goal=f"Retrieve relevant general knowledge needed to solve the task based on the main role - Main goal: {main_role}",
+            persist_directory="./.db",
+            compress_knowledge=compress_knowledge,
+            collection_name=general_collection_name,
+            llm=llm,
         )
 
-    def _log_step(self, agent_name: str, input_data: str, output_data: str):
-        table = Table(title=f"[bold]{agent_name}[/bold]", show_header=False, box=None)
-        table.add_row("[cyan]Input:[/cyan]", str(input_data))
-        table.add_row("[green]Output:[/green]", str(output_data))
-        console.print(Panel(table, expand=False))
-
-    def _prompt_meta_prompt_agent(
-        self, task: str, prompt_knowledge: str, verbose: bool = False
-    ) -> str:
-        system_prompt = f"""You are the Meta-Prompt Agent in the Composite Learning Unit.
-        Main Goal: {self.prompt_main_goal}
-        Your task is to generate a detailed, task-specific prompt for the Operational Agent based on the given task and retrieved prompt knowledge.
-        This prompt should guide the Operational Agent in effectively using the general knowledge to complete the task."""
-
-        user_prompt = f"Task: {task}\nPrompt Knowledge: {prompt_knowledge}\nGenerate a detailed task-specific prompt:"
-
-        class MetaPromptAgentOutput(BaseModel):
-            prompt: str = Field(
-                ...,
-                description="The detailed task-specific prompt generated by the Meta-Prompt Agent",
-            )
-
-        query = self.llm.format_prompt(
-            system_prompt=system_prompt, user_prompt=user_prompt
+        self.prompt_kmu = KMU(
+            main_goal=f"Extract relevant information needed to construct high-quality prompts based on the feedback from answering specific task-related query with a given old prompt. - Main goal:  {main_role} ",
+            storage_goal=f"Store prompt/role/function of agent-related knowledge and prompt's effectiveness insights like strengths and weaknesses needed to perform the main role - Main goal: {main_role} better on given tasks. Encourage storing knowledge that can be used in future tasks and not just for the current task.",
+            retrieval_goal=f"Retrieve relevant prompt insights needed for constructing better prompts to achieve the - Main goal: {main_role} for given tasks",
+            persist_directory="./.db",
+            compress_knowledge=compress_knowledge,
+            collection_name=prompt_collection_name,
+            llm=llm,
         )
-        result = self.llm.generate(query, schema=MetaPromptAgentOutput)
 
-        if verbose:
-            self._log_step("Meta-Prompt Agent", query, result.prompt)
+        self.operational_agent = None
+        self.pruning_queue = []
+        self.training_iterations = 0
+        self.custom_analysis_agent = None
 
-        return result.prompt
+        # Initialize agents
+        self.initialize_agents()
 
-    def _prompt_operational_agent(
+    def _generate_response(
         self,
-        task: str,
-        general_knowledge: str,
-        task_prompt: str,
-        schema: BaseModel,
-        verbose: bool = False,
-    ) -> Any:
-        system_prompt = f"""You are the Operational Agent in the Composite Learning Unit.
-        Main Goal: {self.main_goal}
-        Your task is to process the given task using the provided general knowledge and following the detailed task-specific prompt.
-        Before answering, first think step by step and explain the reasoning behind the answer and how the which parts of the general knowledge and prompt knowledge were used to arrive at the answer. Give detailed reasoning and explanation.
+        name: str,
+        role: str,
+        function: str,
+        user_prompt: str,
+        response_model: BaseModel,
+    ):
+        system_prompt = f"""
+        You are: {name}
+        Your role: {role}
+        Your function: {function}
+        Based on your role and function, do the task you are given.
         """
 
-        user_prompt = f"Task: {task}\nGeneral Knowledge: {general_knowledge}\nDetailed Task-Specific Prompt: {task_prompt}\nExecute the task:"
+        # if self.verbose:
+        #     console.print(f"[agent_name]Generating response for {name}[/agent_name]")
 
-        class OperationalAgentOutput(BaseModel):
-            explanation: str = Field(
-                ..., description="Detailed explanation of the response"
-            )
-            answer: schema = Field(
-                ...,
-                description="The response answer generated by the Operational Agent",
-            )
-
-        query = self.llm.format_prompt(
-            system_prompt=system_prompt, user_prompt=user_prompt
+        # Generate response using LLM
+        result = self.llm.generate(
+            self.llm.format_prompt(
+                system_prompt=system_prompt, user_prompt=user_prompt
+            ),
+            schema=response_model,
         )
-        result = self.llm.generate(query, schema=OperationalAgentOutput)
 
-        if verbose:
-            self._log_step("Operational Agent", query, str(result))
+        if self.verbose:
+            formatted_output = format_agent_output(name, user_prompt, str(result))
+            console.print(
+                Panel(
+                    formatted_output,
+                    title=name,
+                    border_style="cyan",
+                    expand=False,
+                )
+            )
 
         return result
 
-    def reason(
-        self,
-        query: str,
-        schema: BaseModel,
-        verbose: bool = False,
-        _capture_knowledge: bool = False,
-    ) -> Any:
-        if verbose:
-            console.print(
-                "[info]Starting Reasoning Process[/info]",
+    def create_operational_agent(self, prompt):
+        if self.custom_analysis_agent is None:
+            self.operational_agent = lambda input: self._generate_response(
+                name="OperationalAgent",
+                role="Execute tasks based on the provided prompt",
+                function=prompt,
+                user_prompt=input,
+                response_model=OperationalAgentOutput,
+            )
+        else:
+            self.operational_agent = lambda input: self.custom_analysis_agent(
+                prompt, input
             )
 
-        # Retrieve general knowledge
-        general_knowledge = self.general_kmu.retrieve(query)
-        if verbose:
-            self._log_step("General KMU Retrieval", query, general_knowledge)
+    def initialize_agents(self):
+        class PromptGenerationOutput(BaseModel):
+            prompt: str = Field(..., description="Generated prompt")
 
-        # Retrieve prompt knowledge
-        prompt_knowledge = self.prompt_kmu.retrieve(query)
-        if verbose:
-            self._log_step("Prompt KMU Retrieval", query, prompt_knowledge)
-
-        # Generate task-specific prompt
-        task_prompt = self._prompt_meta_prompt_agent(query, prompt_knowledge, verbose)
-
-        # Execute task using Operational Agent
-        result = self._prompt_operational_agent(
-            query, general_knowledge, task_prompt, schema, verbose
+        self.meta_prompt_agent = lambda input: self._generate_response(
+            name="MetaPromptAgent",
+            role="Generate and optimize prompts for the Operational Agent",
+            function=f"""
+            Main Goal: {self.main_role}
+            
+            Your task is to generate and optimize prompts for the Operational Agent.
+            Consider the main goal, available knowledge, and task at hand.
+            Combine goal-oriented and task-specific elements to create effective prompts that will help solve the given task.
+            
+            Output a prompt that includes:
+            1. A clear definition of the agent's role
+            2. A detailed description of the agent's function and responsibilities based on relevant knowledge and task at hand
+            3. Specific instructions to help solve the current task or work on it better with the main goal in mind based on relevant knowledge.
+            4. Relevant knowledge to consider (if available)
+            """,
+            user_prompt=input,
+            response_model=PromptGenerationOutput,
         )
 
-        if verbose:
-            console.print(
-                "[info]Reasoning Process Completed[/info]",
-            )
-
-        if _capture_knowledge:
-            return result, general_knowledge, prompt_knowledge
-        else:
-            return result
-
-    def save_general_knowledge(self, knowledge: str, compress: bool = True) -> str:
-        return self.general_kmu.save(knowledge, compress)
-
-    def save_prompt_knowledge(self, knowledge: str, compress: bool = True) -> str:
-        return self.prompt_kmu.save(knowledge, compress)
-
-    def _prompt_comparison_agent(
-        self,
-        query: str,
-        main_goal: str,
-        generated_output: Any,
-        expected_output: Any,
-        verbose: bool = False,
-    ) -> Tuple[bool, str]:
-        system_prompt = f"""You are the Comparison Agent in the Composite Learning Unit.
-        Main Goal: {main_goal}
-        Your task is to compare the generated output with the expected output, considering the query and main goal.
-        Determine if they are equivalent, either verbatim or semantically, based on the context of the task.
-        
-        - Determine if the response matches the expected output exactly
-        - If it does not match exactly see if it matches in meaning and intent clearly and unambiguously.
-        - Provide an explanation of your comparison, highlighting similarities and differences
-        - Return a boolean indicating whether the response is correct and an explanation
-        - Do not speculate what might be the reason for the difference, focus on the comparison itself.
-        """
-
-        user_prompt = f"""Query: {query}
-        Generated Output: {generated_output}
-        Expected Output: {expected_output}
-        Are these outputs equivalent? Provide a boolean result and a detailed explanation.
-        """
-
-        class ComparisonAgentOutput(BaseModel):
-            is_equivalent: bool = Field(
-                ..., description="Boolean indicating if the outputs are equivalent"
+        class ResponseComparisonOutput(BaseModel):
+            is_correct: bool = Field(
+                ..., description="Whether the response matches the expected output"
             )
             explanation: str = Field(
-                ..., description="Detailed explanation of the equivalence decision"
+                ..., description="Explanation of the comparison result"
             )
 
-        query = self.llm.format_prompt(
-            system_prompt=system_prompt, user_prompt=user_prompt
+        self.response_comparison_agent = lambda input: self._generate_response(
+            name="ResponseComparison",
+            role="Compare the agent's response to the expected output",
+            function="""
+            Your task is to compare the agent's response to the expected output.
+            check the task, and the expected output and then compare the response to the expected output for the given task.
+            - Determine if the response matches the expected output exactly
+            - If it does not match exactly see if it matches in meaning and intent clearly and unambiguously.
+            - Provide an explanation of your comparison, highlighting similarities and differences
+            - Return a boolean indicating whether the response is correct and an explanation
+            - if the response says the same thing as expected output (first check verbatim, if not in intent), then it is correct, if not, then it is wrong. First compare them verbatim, if it does not match, then compare them in terms of meaning and intent.
+            """,
+            user_prompt=input,
+            response_model=ResponseComparisonOutput,
         )
-        result = self.llm.generate(query, schema=ComparisonAgentOutput)
 
-        if verbose:
-            self._log_step(
-                "Comparison Agent",
-                query,
-                f"Equivalent: {result.is_equivalent}\nExplanation: {result.explanation}",
+        class FeedbackOutput(BaseModel):
+            feedback: str = Field(..., description="Detailed feedback on the response")
+            improvement_suggestions: List[str] = Field(
+                ..., description="Suggestions for improvement"
+            )
+            knowledge_gaps: List[str] = Field(
+                ..., description="Identified knowledge gaps"
             )
 
-        return result.is_equivalent, result.explanation
+        self.general_feedback_agent = lambda input: self._generate_response(
+            name="GeneralFeedbackAnalysis",
+            role="Provide general feedback on the agent's performance",
+            function="""
+            You are responsible for providing general feedback on the Operational Agent's performance when no expected output is provided.
+            Your tasks include:
+            - Evaluate the relevance and quality of the response in relation to the given task
+            - Assess the reasoning process and its effectiveness
+            - Suggest potential improvements or areas for further exploration
+            - Identify any apparent knowledge gaps
+            - Provide a performance score and detailed feedback
+            Consider the overall goal of the CLU while providing feedback.
+            - question and evaluate things you are not sure about, and provide feedback on the reasoning and the response.
+            - ask about knowledge gaps and provide feedback on the reasoning and the response or lack of such knowledge.
+            Consider the overall goal of the CLU while providing feedback.
+            If no expected output is provided, evaluate the response based on its relevance and quality for the given task and overall goal.
+            check if the reasoning and the reply makes sense given the main goal of what we are trying to achieve.
+            Important: Prefer giving detailed and comprehensive yet not verbose feedback that is not already there in the knowledge, but will help and is correct.
+            """,
+            user_prompt=input,
+            response_model=FeedbackOutput,
+        )
 
-    def _prompt_feedback_agent(
+        class PositiveFeedbackOutput(BaseModel):
+            feedback: str = Field(
+                ..., description="Detailed feedback on what worked well"
+            )
+            success_factors: List[str] = Field(
+                ..., description="Factors that contributed to the success"
+            )
+
+        self.positive_feedback_agent = lambda input: self._generate_response(
+            name="PositiveFeedbackAnalysis",
+            role="Analyze successful responses and extract insights",
+            function="""
+            You are responsible for analyzing successful responses from the Operational Agent.
+            Your tasks include:
+            - Evaluate why the response correctly matches the expected output
+            - Identify key elements in the reasoning that led to the correct answer
+            - Suggest how this success can be replicated in future tasks
+            - Highlight any particularly effective strategies used
+            - Provide a performance score and detailed feedback
+            """,
+            user_prompt=input,
+            response_model=PositiveFeedbackOutput,
+        )
+
+        class NegativeFeedbackOutput(BaseModel):
+            feedback: str = Field(
+                ..., description="Detailed feedback on what went wrong"
+            )
+            improvement_suggestions: List[str] = Field(
+                ..., description="Suggestions for improvement"
+            )
+
+        self.negative_feedback_agent = lambda input: self._generate_response(
+            name="NegativeFeedbackAnalysis",
+            role="Analyze incorrect responses and provide improvement suggestions",
+            function="""
+            You are responsible for analyzing incorrect responses from the Operational Agent.
+            Your tasks include:
+            - Evaluate why the response does not match the expected output
+            - Identify gaps in knowledge or reasoning that led to the incorrect answer
+            - Suggest specific improvements to the knowledge base or agent's function
+            - Provide strategies to avoid similar mistakes in the future
+            """,
+            user_prompt=input,
+            response_model=NegativeFeedbackOutput,
+        )
+
+        class KnowledgeInsightOutput(BaseModel):
+            new_knowledge: List[str] = Field(
+                ...,
+                description="List of new knowledge entries, containing things like rules, ideas, concepts, principles, and their applicability",
+            )
+
+        self.knowledge_insight_agent = lambda input: self._generate_response(
+            name="KnowledgeInsight",
+            role="Extract and generalize key knowledge to support the main goal",
+            function="""
+            You are responsible for extracting and generalizing key knowledge.
+            Your tasks include:
+            - Analyzing feedback, tasks, responses, and context to understand the main goal.
+            - Provide positive feedback on what worked.
+            - Detecting patterns and formulating general rules based on the analysis.
+            - Extracting key elements that influence the quality of task answers.
+            - Formulating general, reusable knowledge entries that can be applied to future tasks.
+            - Provide a clear list of knowledge to be added to the database, the list should be diverse and each element should be unique and contain new knowledge to be added.
+            - This list may include the following in a combined format as well: Concepts, ideas, principles, and guidelines for optimal performance.
+            """,
+            user_prompt=input,
+            response_model=KnowledgeInsightOutput,
+        )
+
+    def _get_feedback(
         self,
-        is_positive: bool,
-        query: str,
-        main_goal: str,
-        generated_output: Any,
-        expected_output: Any,
-        comparison_explanation: str,
-        general_knowledge: str,
-        prompt_knowledge: str,
-        verbose: bool = False,
-        max_feedback: int = 5,
-    ) -> Dict[str, str]:
-        agent_type = "Positive" if is_positive else "Negative"
-
-        if is_positive:
-            system_prompt = f"""You are the Positive Feedback Agent in the Composite Learning Unit.
-            Main Goal: {main_goal}
-            Begin by enclosing all thoughts within <thinking> tags, focusing on identifying the positive elements of the knowledge base that led to the successful outcome. Explore multiple perspectives to understand the strengths of the current approach.
-
-            Break down your positive feedback into clear, reinforcing actions within <step> tags. Start with a 20-step budget, focusing on:
-
-            Identifying and explaining which elements of the general knowledge base contributed to the successful outcome.
-            Analyzing how the prompt knowledge effectively guided the reasoning process.
-            Identifying key elements in the reasoning that led to the correct answer.
-            Suggesting how this success can be replicated in future tasks.
-            Use <count> tags after each step to indicate the remaining feedback budget, stopping when it reaches 0. Continuously adapt your feedback based on reflections to maximize the reinforcement of successful strategies.
-
-            Regularly evaluate your reinforcement strategy using <reflection> tags. Be critical and honest about what worked and why. Assign a quality score between 0.0 and 1.0 using <reward> tags after each reflection:
-
-            0.8+: Continue reinforcing the current approach.
-            0.5-0.7: Consider enhancing some elements to strengthen future performance.
-            Below 0.5: Re-evaluate the strengths identified and explore different ways to replicate success.
-            If unsure or if the reward score is low, adjust your feedback to enhance understanding and explain your revised approach within <thinking> tags.
-
-            For each successful element identified, enclose your findings within <success> tags, clearly specifying the contributing factors. Provide actionable suggestions for leveraging these elements in future tasks within <strategy> tags to ensure consistency and improvement.
-
-            If there are multiple strengths or positive aspects worth exploring further, outline each of them individually within <thinking> tags, comparing their relative impact on the successful outcome in <reflection> tags to understand their importance and contribution.
-
-            Continuously aim to provide constructive feedback that encourages:
-
-            Building upon the identified successes.
-            Reinforcing effective components of the reasoning process.
-            Replicating the strategies that led to the correct answer in future scenarios.
-            Synthesize the overall positive feedback within <summary> tags, summarizing key strengths, their impact, and actionable recommendations for future success.
-
-            Conclude with a final reflection within <final_reflection> tags, discussing the key elements of the success, how they can be consistently applied, and areas for potential enhancement. Assign a final reward score based on the overall reinforcement process.
-            
-            **IMPORTATNT:** Do all these with the main goal in mind: {main_goal}.
-            Give a detailed list of no more than {max_feedback} feedback each for improving general knowledge and prompt knowledge."""
+        oa_response: OperationalAgentOutput,
+        expected_output: Optional[str],
+        knowledge: Optional[str],
+        task: str,
+    ) -> FeedbackOutput:
+        if expected_output is not None and expected_output != "":
+            comparison_result = self.response_comparison_agent(
+                f"Compare Response: <{oa_response.response}>\n to Expected Output: <{expected_output}>\n for the Task: {task}",
+            )
+            feedback_input = f"""
+            Overall Goal: {self.main_role}
+            Task: {task}
+            Agent Response: {oa_response.response}
+            Agent Reasoning: {oa_response.reasoning}
+            Agent Confidence: {oa_response.confidence}
+            Expected Output: {expected_output}
+            Is Correct: {comparison_result.is_correct}
+            Knowledge: {knowledge}
+            Comparison Explanation: {comparison_result.explanation}
+            """
+            feedback = (
+                self.positive_feedback_agent(
+                    feedback_input,
+                )
+                if comparison_result.is_correct
+                else self.negative_feedback_agent(
+                    feedback_input,
+                )
+            )
         else:
-            system_prompt = f"""You are the Negative Feedback Agent in the Composite Learning Unit.
-            Main Goal: {main_goal}
-            
-            Begin by enclosing all thoughts within <thinking> tags, focusing on identifying gaps and inaccuracies in the knowledge base that led to the incorrect outcome. Explore multiple perspectives to thoroughly assess the issue.
-
-            Break down your feedback into clear corrective actions within <step> tags. Start with a 20-step budget, focusing on:
-
-            Identifying gaps or inaccuracies in the knowledge bases.
-            Analyzing how the knowledge may have misguided the reasoning process.
-            Evaluating why the response does not match the expected outcome.
-            Identifying key elements in the reasoning that led to the incorrect answer.
-            Suggesting specific changes and improvements to the knowledge base.
-            Providing strategies to avoid similar mistakes in the future.
-            After each step, use <count> tags to indicate the remaining feedback budget, stopping when reaching 0. Adjust your strategy continuously based on intermediate reflections, adapting your feedback to address newly identified issues or potential corrections.
-
-            Regularly evaluate your corrective approach using <reflection> tags. Be critical and honest about the effectiveness of each corrective action. Assign a quality score between 0.0 and 1.0 using <reward> tags after each reflection:
-
-            0.8+: Continue the current corrective approach.
-            0.5-0.7: Consider minor adjustments to the feedback or strategy.
-            Below 0.5: Seriously consider backtracking and trying a different corrective approach.
-            If unsure or if the reward score is low, backtrack and try a different feedback strategy, explaining your reasoning and new direction within <thinking> tags.
-
-            For each identified gap or issue, clearly enclose your findings within <gap> tags. Suggest potential changes or additions to the knowledge base within <strategy> tags, ensuring your recommendations are specific and actionable.
-
-            If multiple feedback strategies are viable, explore each one individually, comparing their effectiveness within <reflection> tags to decide the best corrective course. Use <thinking> tags as a scratchpad to outline alternative approaches for addressing gaps in the knowledge or reasoning.
-
-            Continuously aim to provide constructive and diverse feedback that targets specific aspects, including:
-
-            Concrete improvements to the knowledge base.
-            Strategies to prevent similar mistakes in future iterations.
-            Key elements of the reasoning that need to be corrected.
-            Synthesize all your feedback into a concise summary within <summary> tags, including the main corrective points and the rationale behind suggested improvements.
-
-            Conclude with a final reflection within <final_reflection> tags, discussing the effectiveness of the corrective process, challenges faced, and how the feedback provided might impact future performance. Assign a final reward score to the overall feedback process.
-            **IMPORTATNT:** Do all these with the main goal in mind: {main_goal}.
-            Give a detailed list of no more than {max_feedback} feedback each for improving general knowledge and prompt knowledge."""
-
-        user_prompt = f"""Query: {query}
-        Generated Output: {generated_output}
-        Expected Output: {expected_output}
-        Comparison Explanation: {comparison_explanation}
-        General Knowledge Used: {general_knowledge}
-        Prompt Knowledge Used: {prompt_knowledge}
-        Provide detailed, through and targeted feedback for improving general knowledge and prompt knowledge:"""
-
-        class FeedbackAgentOutput(BaseModel):
-            thinking_process: str = Field(
-                ..., description="Thinking process of the agent"
+            feedback_input = f"""
+            Overall Goal: {self.main_role}
+            Task: {task}
+            Agent Response: {oa_response.response}
+            Agent Reasoning: {oa_response.reasoning}
+            Agent Confidence: {oa_response.confidence}
+            """
+            feedback = self.general_feedback_agent(
+                feedback_input,
             )
-            general_knowledge_feedback: List[str] = Field(
-                ..., description="Feedback for improving the general knowledge base"
-            )
-            prompt_knowledge_feedback: List[str] = Field(
-                ..., description="Feedback for improving the prompt knowledge"
-            )
+        return feedback, comparison_result.is_correct if expected_output else None
 
-        query = self.llm.format_prompt(
-            system_prompt=system_prompt, user_prompt=user_prompt
+    def prune_knowledge_bases(self):
+
+        for entry in self.pruning_queue:
+
+            def prune_prompt_kmu():
+                if entry["prompt_ids"]:
+                    with Lock():
+                        self.prompt_kmu.prune(entry["feedback"], entry["prompt_ids"])
+
+            def prune_general_kmu():
+                if entry["general_ids"]:
+                    with Lock():
+                        self.general_kmu.prune(entry["feedback"], entry["general_ids"])
+
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                executor.submit(prune_prompt_kmu)
+                executor.submit(prune_general_kmu)
+        self.pruning_queue = []
+
+    def inference(self, task: str, **kwargs):
+        # Retrieve relevant prompt knowledge
+        prompt_knowledge = self.prompt_kmu.retrieve_knowledge(
+            task, n_results=self.retrival_limit
         )
-        result = self.llm.generate(query, schema=FeedbackAgentOutput)
-
-        if verbose:
-            self._log_step(
-                f"{agent_type} Feedback Agent",
-                query,
-                f"General Knowledge Feedback: {result.general_knowledge_feedback}\nPrompt Knowledge Feedback: {result.prompt_knowledge_feedback}",
+        prompt_knowledge_str = (
+            " ".join(
+                [
+                    item
+                    for sublist in prompt_knowledge["documents"]
+                    for item in (sublist if isinstance(sublist, list) else [sublist])
+                ]
             )
+            if prompt_knowledge["documents"]
+            else "No relevant prompt knowledge found."
+        )
+
+        # Generate prompt using Meta-Prompt Agent
+        prompt_input = f"""
+        Main Goal: {self.main_role}
+        Task: {task}
+        Relevant Prompt Knowledge: {prompt_knowledge_str}
+        """
+        generated_prompt = self.meta_prompt_agent(prompt_input)
+
+        # Create or update Operational Agent with the generated prompt
+        self.create_operational_agent(generated_prompt)
+
+        general_knowledge_input = f"""
+        Main Goal: {self.main_role}
+        Task: {task}
+        Task Solving Prompt: {generated_prompt}
+        """
+        # Retrieve relevant general knowledge
+        general_knowledge = self.general_kmu.retrieve_knowledge(
+            general_knowledge_input, n_results=self.retrival_limit
+        )
+        general_knowledge_str = (
+            " ".join(
+                [
+                    item
+                    for sublist in general_knowledge["documents"]
+                    for item in (sublist if isinstance(sublist, list) else [sublist])
+                ]
+            )
+            if general_knowledge["documents"]
+            else "No relevant general knowledge found."
+        )
+
+        # Execute task with relevant general knowledge
+        oa_input = f"""
+        Task: {task}
+        Relevant Knowledge: {general_knowledge_str}
+
+        Use the above relevant knowledge to inform your response. If no relevant knowledge is provided, rely on your general understanding.
+        """
+        oa_response = self.operational_agent(oa_input)
 
         return {
-            "thinking_process": result.thinking_process,
-            "general_knowledge_feedback": result.general_knowledge_feedback,
-            "prompt_knowledge_feedback": result.prompt_knowledge_feedback,
+            "response": oa_response.response,
+            "reasoning": oa_response.reasoning,
+            "confidence": oa_response.confidence,
+            "generated_prompt": generated_prompt,
+            "general_knowledge_str": general_knowledge_str,
+            "prompt_knowledge": prompt_knowledge,
+            "general_knowledge": general_knowledge,
         }
 
     def train(
         self,
-        x: Any,
-        y: Optional[Any] = None,
-        schema: BaseModel = None,
-        verbose: bool = False,
-    ) -> Dict[str, Any]:
-        if verbose:
-            console.print("[info]Starting Training Process[/info]")
-
-        # Perform reasoning and capture knowledge used
-        generated_output, general_knowledge_used, prompt_knowledge_used = self.reason(
-            x, schema, verbose, _capture_knowledge=True
+        task: str,
+        expected_output: Optional[str] = None,
+        prune_after=1,
+        **kwargs,
+    ):
+        # First perform inference
+        inference_result = self.inference(task, **kwargs)
+        oa_response = OperationalAgentOutput(
+            response=inference_result["response"],
+            reasoning=inference_result["reasoning"],
+            confidence=inference_result["confidence"],
         )
 
-        if y is None:
-            if verbose:
-                console.print(
-                    "[warning]No expected output provided. Skipping comparison and feedback.[/warning]"
-                )
-            return {"generated_output": generated_output}
-
-        # Compare generated output with expected output
-        is_equivalent, comparison_explanation = self._prompt_comparison_agent(
-            x, self.main_goal, generated_output, y, verbose
+        right_answer = None
+        feedback, right_answer = self._get_feedback(
+            oa_response=oa_response,
+            expected_output=expected_output,
+            knowledge=inference_result["general_knowledge_str"],
+            task=task,
         )
 
-        # Generate feedback based on comparison results and knowledge used
-        feedback = self._prompt_feedback_agent(
-            is_equivalent,
-            x,
-            self.main_goal,
-            generated_output,
-            y,
-            comparison_explanation,
-            general_knowledge_used,
-            prompt_knowledge_used,
-            verbose,
+        # Store prompt feedback
+        self.store_prompt_feedback(
+            inference_result["generated_prompt"],
+            task,
+            oa_response.confidence,
+            feedback.feedback,
         )
 
-        # Align and save new knowledge in parallel
-        with ThreadPoolExecutor(max_workers=2) as executor:
-            general_future = executor.submit(
-                self._align_and_save_knowledge,
-                "general",
-                f"Thinking process : {feedback['thinking_process']}"
-                + str(feedback["general_knowledge_feedback"]),
-                general_knowledge_used,
-                x,
-                verbose,
-            )
-            prompt_future = executor.submit(
-                self._align_and_save_knowledge,
-                "prompt",
-                f"Thinking process : {feedback['thinking_process']}"
-                + str(feedback["prompt_knowledge_feedback"]),
-                prompt_knowledge_used,
-                x,
-                verbose,
-            )
+        # Extract knowledge insights
+        knowledge_update = self.knowledge_insight_agent(
+            f"Overall Goal: {self.main_role}\nAnalyze feedback: {feedback}\nTask: {task}\nResponse: {oa_response.response}\nReasoning: {oa_response.reasoning}",
+        )
 
-            general_saved_ids = general_future.result()
-            prompt_saved_ids = prompt_future.result()
+        if knowledge_update.new_knowledge:
 
-        if verbose:
-            console.print("[info]Training Process Completed[/info]")
+            def save_knowledge(knowledge):
+                with Lock():
+                    self.general_kmu.save_knowledge(knowledge)
 
+            with ThreadPoolExecutor(max_workers=4) as executor:
+                executor.map(save_knowledge, knowledge_update.new_knowledge)
+
+        # Flatten and check IDs
+        prompt_ids = inference_result["prompt_knowledge"].get("ids", [])
+        general_ids = inference_result["general_knowledge"].get("ids", [])
+
+        if prompt_ids and general_ids:
+            flattened_prompt_ids = [item for sublist in prompt_ids for item in sublist]
+            flattened_general_ids = [
+                item for sublist in general_ids for item in sublist
+            ]
+            if (
+                self.training_iterations % prune_after == 0
+            ):  # Control the pruning frequency
+                if flattened_prompt_ids and flattened_general_ids:
+                    full_feedback_input = f"""
+                    Overall Goal: {self.main_role}
+                    Task: {task}
+                    Agent Response: {oa_response.response}
+                    Expected Output: {expected_output}
+                    Feedback for the agent's response: {feedback.feedback}
+                    """
+                    self.pruning_queue.append(
+                        {
+                            "feedback": full_feedback_input,
+                            "prompt_ids": flattened_prompt_ids,
+                            "general_ids": flattened_general_ids,
+                        }
+                    )
+
+        # Prune if necessary
+        if len(self.pruning_queue) >= self.pruning_queue_size:
+            self.prune_knowledge_bases()
+
+        self.training_iterations += 1
         return {
-            "generated_output": generated_output,
-            "is_equivalent": is_equivalent,
-            "comparison_explanation": comparison_explanation,
-            "feedback": feedback,
-            "new_general_knowledge_ids": general_saved_ids,
-            "new_prompt_knowledge_ids": prompt_saved_ids,
+            "response": oa_response.response,
+            "reasoning": oa_response.reasoning,
+            "confidence": oa_response.confidence,
+            "feedback": feedback.dict(),
+            "knowledge_update": knowledge_update.new_knowledge,
+            "right_answer": right_answer,
         }
 
-    def _prompt_knowledge_alignment_agent(
+    def call(
         self,
-        knowledge_type: str,
-        feedback: str,
-        existing_knowledge: str,
-        query: str,
-        main_goal: str,
-        verbose: bool = False,
-        max_knowldge: int = 5,
-    ) -> List[str]:
-        system_prompt = f"""You are the Knowledge Alignment Agent for {knowledge_type} knowledge in the Composite Learning Unit.
-        Main Goal: {main_goal}
-        Your task is to process the feedback and existing knowledge to generate a comprehensive list of knowledge entries that will replace the current knowledge base.
-        This list should include:
-        1. Modified versions of existing knowledge entries that address the feedback.
-        2. New knowledge entries that fill gaps identified in the feedback.
-        3. Existing knowledge entries that remain relevant and accurate.
-        4. Exclude any existing knowledge that is no longer relevant or accurate based on the feedback.
-        5. Always collect diverse list of knowledge entries to ensure comprehensive coverage that is relevant to the main goal.
-        6. Favour adding targeted short and relevant knowledge entries over long and verbose entries.
-        7. Never memorize the tasks, only extract and save the general and relevant information that can be used in future tasks.
-        8. If something methods are tired and is wrong or did not work, always keep the record of that and do not repeat the same mistake again.
-        Begin by processing all feedback within <thinking> tags, focusing on extracting, refining, and aligning the knowledge to support the {main_goal} effectively. Carefully consider how feedback and existing knowledge entries relate to each other and how modifications will meet the requirements of {knowledge_type} knowledge.
+        task: str,
+        expected_output: Optional[str] = None,
+        mode: str = "",
+        prune_after=1,
+        **kwargs,
+    ):
+        # Retrieve relevant prompt knowledge
+        prompt_knowledge = self.prompt_kmu.retrieve_knowledge(
+            task, n_results=self.retrival_limit
+        )
+        prompt_knowledge_str = (
+            " ".join(
+                [
+                    item
+                    for sublist in prompt_knowledge["documents"]
+                    for item in (sublist if isinstance(sublist, list) else [sublist])
+                ]
+            )
+            if prompt_knowledge["documents"]
+            else "No relevant prompt knowledge found."
+        )
 
-        Break down your task into clear knowledge alignment steps within <step> tags. Start with a 20-step budget, focusing on:
-
-        Identifying existing knowledge entries that need modification based on the feedback. Include these as modified versions in the new knowledge list.
-        Extracting new knowledge entries that are necessary to fill gaps identified in the feedback. Highlight these entries for addition.
-        Evaluating existing knowledge entries to determine which are still relevant and accurate.
-        Excluding knowledge entries that no longer serve their purpose or have become outdated based on the feedback.
-        After each step, use <count> tags to show the remaining budget, stopping once it reaches 0. Continuously adjust your strategy based on reflections as you proceed.
-
-        Regularly evaluate your knowledge alignment process using <reflection> tags. Be critical and honest about the quality and completeness of the extracted knowledge. Assign a quality score between 0.0 and 1.0 using <reward> tags after each reflection:
-
-        0.8+: Continue with the current knowledge alignment strategy.
-        0.5-0.7: Consider minor adjustments to improve coverage or clarity.
-        Below 0.5: Seriously reconsider your approach to extracting and modifying knowledge, and explain the revised approach within <thinking> tags.
-        If unsure or if the reward score is low, backtrack and try a different alignment strategy, elaborating on the new adjustments within <thinking> tags.
-
-        For each modified or newly added knowledge entry, use <entry> tags to clearly mark the content. Ensure that each entry is short, relevant, and targeted, rather than verbose. Focus on maintaining comprehensive yet concise knowledge coverage to meet the main goal.
-
-        After analyzing existing knowledge, use <retain> tags to list entries that remain valid and useful, and use <exclude> tags to indicate those that should be discarded.
-
-        Throughout your process, collect a diverse set of knowledge entries to ensure comprehensive coverage of {knowledge_type} knowledge relevant to achieving the {main_goal}. Avoid memorizing tasks; instead, focus on saving general and relevant information that can be used for future tasks, using <save> tags for storing this key information.
-
-        For any method that proved incorrect or ineffective, clearly note this using <do_not_repeat> tags to avoid making the same mistake again in future tasks.
-
-        When all modifications, additions, and exclusions are complete, synthesize the final comprehensive list within <summary> tags. Ensure that the new knowledge base is complete, up-to-date, and aligned to meet all aspects of the main goal.
-
-        Conclude with a final reflection within <final_reflection> tags, discussing the completeness and accuracy of the aligned knowledge, the challenges faced, and any considerations for maintaining or improving the knowledge base in future tasks. Assign a final reward score to evaluate the entire knowledge alignment process
-        
-        Remember, the list you provide will completely replace the existing knowledge, so ensure it is comprehensive and addresses all aspects of the {knowledge_type} knowledge needed to achieve the main goal.
-        
-        **IMPORTANT** : After this based on your reasoning, give back a list of new knowledge entries that will replace the existing knowledge base. Give no more than {max_knowldge} new knowledge entries, combine the new knowledge entries without leaving any details to make the list of {max_knowldge} entries.
+        # Generate prompt using Meta-Prompt Agent
+        prompt_input = f"""
+        Main Goal: {self.main_role}
+        Task: {task}
+        Relevant Prompt Knowledge: {prompt_knowledge_str}
         """
+        generated_prompt = self.meta_prompt_agent(prompt_input)
 
-        user_prompt = f"""Query: {query}
-        Existing {knowledge_type} Knowledge: {existing_knowledge}
-        Feedback for {knowledge_type} Knowledge: {feedback}
-        Generate a comprehensive list of knowledge entries that will replace the existing {knowledge_type} knowledge base:"""
+        # Create or update Operational Agent with the generated prompt
+        self.create_operational_agent(generated_prompt)
 
-        class KnowledgeAlignmentOutput(BaseModel):
-            thinking_process: str = Field(
-                ..., description="Thinking process of the agent"
-            )
-            new_knowledge: List[str] = Field(
-                ...,
-                description=f"Final list of {knowledge_type} knowledge entries to replace the existing knowledge base",
-            )
-
-        query = self.llm.format_prompt(
-            system_prompt=system_prompt, user_prompt=user_prompt
+        general_knowledge_input = f"""
+        Main Goal: {self.main_role}
+        Task: {task}
+        Task Solving Prompt: {generated_prompt}
+        """
+        # Retrieve relevant general knowledge
+        general_knowledge = self.general_kmu.retrieve_knowledge(
+            general_knowledge_input, n_results=self.retrival_limit
         )
-        result = self.llm.generate(query, schema=KnowledgeAlignmentOutput)
-
-        if verbose:
-            self._log_step(
-                f"{knowledge_type.capitalize()} Knowledge Alignment Agent",
-                query,
-                f"New Knowledge Entries: {result.new_knowledge}",
+        general_knowledge_str = (
+            " ".join(
+                [
+                    item
+                    for sublist in general_knowledge["documents"]
+                    for item in (sublist if isinstance(sublist, list) else [sublist])
+                ]
             )
-
-        return result.new_knowledge
-
-    def _align_and_save_knowledge(
-        self,
-        knowledge_type: str,
-        feedback: str,
-        existing_knowledge: str,
-        query: str,
-        verbose: bool = False,
-    ) -> List[str]:
-        new_knowledge_entries = self._prompt_knowledge_alignment_agent(
-            knowledge_type, feedback, existing_knowledge, query, self.main_goal, verbose
+            if general_knowledge["documents"]
+            else "No relevant general knowledge found."
         )
 
-        if knowledge_type == "general":
-            kmu = self.general_kmu
+        # Execute task with relevant general knowledge
+        oa_input = f"""
+        Task: {task}
+        Relevant Knowledge: {general_knowledge_str}
+
+        Use the above relevant knowledge to inform your response. If no relevant knowledge is provided, rely on your general understanding.
+        """
+        oa_response = self.operational_agent(
+            oa_input,
+        )
+
+        right_answer = None  # need to return the right answer from the feedback agent and add it. we essentially compare ans to output only in training step when expected output is given.
+        if mode == "training":
+            feedback, right_answer = self._get_feedback(
+                oa_response=oa_response,
+                expected_output=expected_output,
+                knowledge=general_knowledge_str,
+                task=task,
+            )
+
+            # Store prompt feedback
+            self.store_prompt_feedback(
+                generated_prompt, task, oa_response.confidence, feedback.feedback
+            )
+
+            knowledge_update = self.knowledge_insight_agent(
+                f"Overall Goal: {self.main_role}\nAnalyze feedback: {feedback}\nTask: {task}\nResponse: {oa_response.response}\nReasoning: {oa_response.reasoning}",
+            )
+
+            if knowledge_update.new_knowledge:
+                for knowledge in knowledge_update.new_knowledge:
+                    self.general_kmu.save_knowledge(knowledge)
+
+            # Flatten and check IDs
+            prompt_ids = prompt_knowledge.get("ids", [])
+            general_ids = general_knowledge.get("ids", [])
+
+            if prompt_ids and general_ids:
+                flattened_prompt_ids = [
+                    item for sublist in prompt_ids for item in sublist
+                ]
+                flattened_general_ids = [
+                    item for sublist in general_ids for item in sublist
+                ]
+                if (
+                    self.training_iterations % prune_after == 0
+                ):  # Control the pruning frequency
+
+                    if flattened_prompt_ids and flattened_general_ids:
+                        full_feedback_input = f"""
+                        Overall Goal: {self.main_role}
+                        Task: {task}
+                        Agent Response: {oa_response.response}
+                        Expected Output: {expected_output}
+                        
+                        Feedback for the agent's response: {feedback.feedback}
+                        """
+                        self.pruning_queue.append(
+                            {
+                                "feedback": full_feedback_input,
+                                "prompt_ids": flattened_prompt_ids,
+                                "general_ids": flattened_general_ids,
+                            }
+                        )
+
+            if (
+                len(self.pruning_queue) >= self.pruning_queue_size
+            ):  # Control the queue size
+                self.prune_knowledge_bases()
+            self.training_iterations += 1
+            return {
+                "response": oa_response.response,
+                "reasoning": oa_response.reasoning,
+                "confidence": oa_response.confidence,
+                "feedback": feedback.dict(),
+                "knowledge_update": knowledge_update.new_knowledge,
+                "right_answer": right_answer,
+            }
+
+        return {
+            "response": oa_response.response,
+            "reasoning": oa_response.reasoning,
+            "confidence": oa_response.confidence,
+            "knowledge_update": "None",
+            "right_answer": right_answer,
+        }
+
+    def store_prompt_feedback(self, prompt, task, performance, feedback):
+        insight = f"Prompt: {prompt}\nTask: {task}\nPerformance: {performance}\nFeedback: {feedback}"
+        self.prompt_kmu.save_knowledge(insight)
+
+    def print_knowledge_base(self):
+        console = Console()
+        console.print("General Knowledge Base:")
+        general_entries = self.general_kmu.collection.get()
+        if not general_entries["ids"]:
+            console.print("[bold red]Knowledge base is empty.[/bold red]")
         else:
-            kmu = self.prompt_kmu
+            for idx, doc in enumerate(general_entries["documents"]):
+                console.print(f"Entry {idx + 1}: {doc}")
 
-        # Get the IDs of the existing knowledge entries
-        existing_ids = kmu.collection.get()["ids"]
-
-        # Replace the existing knowledge with the new entries
-        saved_ids = kmu.replace_knowledge(
-            existing_ids, new_knowledge_entries, compress=self.compress, verbose=verbose
-        )
-
-        return saved_ids
-
-    def print_knowledge(self, verbose: bool = False):
-        console.print("[bold]General Knowledge:[/bold]")
-        self.general_kmu.print_knowledge(verbose)
-
-        console.print("\n[bold]Prompt Knowledge:[/bold]")
-        self.prompt_kmu.print_knowledge(verbose)
-
-
-def example_usage():
-    class OperationalAgentOutput(BaseModel):
-        response: str = Field(
-            ..., description="The response generated by the Operational Agent"
-        )
-
-    # Define a mock LLM class for demonstration
-    class MockLLM:
-        def generate(self, prompt, schema):
-            # This is a simplistic mock. In reality, you'd use a real LLM here.
-            return schema(
-                **{
-                    field: f"Mocked {field} based on: {prompt}"
-                    for field in schema.__fields__
-                }
-            )
-
-        def format_prompt(self, system_prompt, user_prompt):
-            return f"{system_prompt}\n{user_prompt}"
-
-    # Initialize the CLU
-    llm = MockLLM()
-    clu = CompositeLearnUnit(
-        llm,
-        main_goal="Provide accurate and helpful information across various domains",
-        general_main_goal="Maintain a comprehensive knowledge base for general reasoning and problem-solving",
-        prompt_main_goal="Develop effective prompting strategies for diverse tasks and contexts",
-        storage_goal="Store knowledge efficiently, emphasizing clarity and relevance",
-        retrieval_goal="Retrieve the most pertinent information for each specific task or query",
-    )
-
-    # Manually add some initial knowledge to the KMUs
-    clu.save_general_knowledge(
-        "Climate change is causing global temperatures to rise, leading to various environmental impacts."
-    )
-    clu.save_prompt_knowledge(
-        "When explaining complex topics, start with a simple analogy before providing technical details."
-    )
-
-    # Perform training
-    query = "Explain the potential impacts of climate change on marine ecosystems"
-    expected_output = "Climate change affects marine ecosystems through ocean warming, acidification, and sea level rise, leading to habitat loss and species migration."
-    training_result = clu.train(
-        query, expected_output, OperationalAgentOutput, verbose=True
-    )
-
-    console.print("[bold green]Training Result:[/bold green]", training_result)
-
-
-if __name__ == "__main__":
-    example_usage()
+        console.print("\nPrompt Knowledge Base:")
+        prompt_entries = self.prompt_kmu.collection.get()
+        if not prompt_entries["ids"]:
+            console.print("[bold red]Knowledge base is empty.[/bold red]")
+        else:
+            for idx, doc in enumerate(prompt_entries["documents"]):
+                console.print(f"Entry {idx + 1}: {doc}")
