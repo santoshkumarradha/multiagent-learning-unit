@@ -273,6 +273,8 @@ class CLU:
             - Suggest how this success can be replicated in future tasks
             - Highlight any particularly effective strategies used
             - Provide a performance score and detailed feedback
+            Make sure to align your feedback with the main goal of the CLU in mind.
+            Main Goal: {self.main_role}
             """,
             user_prompt=input,
             response_model=PositiveFeedbackOutput,
@@ -299,6 +301,8 @@ class CLU:
             - Suggest potential improvements or areas for further exploration
             - Make sure in your suggestions you are not repeating the same thing that is already there in the knowledge base but provide new insights as to how to improve the response and what worked and what did not work.
             - Provide feedback of new knowledge that can be added to the knowledge base to try diverse solutions.
+            Make sure to align your feedback with the main goal of the CLU in mind.
+            Main Goal: {self.main_role}
             """,
             user_prompt=input,
             response_model=NegativeFeedbackOutput,
@@ -327,6 +331,9 @@ class CLU:
             - Provide clear lists of positive and negative knowledge to be added to the respective databases.
             - The lists should be diverse and each element should be unique and contain new knowledge to be added.
             - These lists may include concepts, ideas, principles, and guidelines for optimal performance or avoidance of mistakes.
+            
+            Make sure you do all of this with the main goal in mind and align your knowledge gathering with the main goal.
+            Main Goal : {self.main_role}
             """,
             user_prompt=input,
             response_model=KnowledgeInsightOutput,
