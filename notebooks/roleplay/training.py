@@ -110,7 +110,7 @@ Learn all the relationships and details about {change_char_name} in full detail.
 clu = CLU(
     main_role=main_role,
     operational_agent=DefaultOperationalAgent(llm, verbose=False),
-    collection_name="role-play-digital-twin-v3-dialogue",  # "role-play-v1-dialogue"(Holds the speaking style)
+    collection_name="role-play-digital-twin-v4-relation",  # "role-play-v1-dialogue"(Holds the speaking style)
     compress_knowledge=False,
     retrival_limit=15,
     llm=llm,
@@ -146,10 +146,10 @@ def train_clu_parallel(clu_instance, dialogues, batch_size=5, num_iterations=10)
 
 
 # Train in parallel
-train_clu_parallel(clu, surrounding_dialogues, batch_size=5, num_iterations=10)
+train_clu_parallel(clu, surrounding_dialogues, batch_size=5, num_iterations=20)
 
 response = clu.inference(
-    f"tell me all the details you know about {change_char_name} in full detail"
+    f"tell me all the relationships that {change_char_name} has with various other characters in full detail"
 )
 print(response["response"])
 
