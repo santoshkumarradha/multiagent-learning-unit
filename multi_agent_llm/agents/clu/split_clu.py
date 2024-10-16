@@ -401,7 +401,6 @@ class CLU:
     def inference(
         self, task: str, response_schema: Optional[Type[BaseModel]] = None, **kwargs
     ):
-        print(f"inference schema: {response_schema}")
         # Retrieve knowledge in parallel
         with ThreadPoolExecutor(max_workers=2) as executor:
             future_learning = executor.submit(
