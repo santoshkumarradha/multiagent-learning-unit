@@ -1,3 +1,4 @@
+import random
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from threading import Lock
@@ -76,6 +77,7 @@ class CLU:
         compress_knowledge=True,
         collection_name=None,
         retrival_limit=10,
+        exploration_rate=0.5,
         llm=None,
         verbose=False,
     ):
@@ -115,6 +117,7 @@ class CLU:
 
         self.operational_agent = None
         self.pruning_queue = []
+        self.exploration_rate = exploration_rate
         self.training_iterations = 0
         self.custom_analysis_agent = None
 
@@ -191,8 +194,9 @@ class CLU:
             2. A detailed description of the agent's function and responsibilities based on relevant knowledge and task at hand
             3. Specific instructions to help solve the current task or work on it better with the main goal in mind based on relevant knowledge.
             4. Relevant knowledge to consider (if available), both positive and negative
-            6. Try a variety of methods based on the knowledge and the task at hand to generate the best prompt.
             5. Use latest prompting techniques and strategies to generate the best prompt like Chain of thought prompts (asking to think step by step) etc., or more novel and innovative strategies based on the task at hand
+
+            { "IMPORTANT: You are now in exploration phase, so ignore above instructions and the prompt you generate should try out a completely new approach that is not present in our knowledge base at all." if random.random() < self.exploration_rate else "" }
             """,
             user_prompt=input,
             response_model=PromptGenerationOutput,
