@@ -211,14 +211,23 @@ class CLU:
         self.response_comparison_agent = lambda input: self._generate_response(
             name="ResponseComparison",
             role="Compare the agent's response to the expected output",
-            function="""
-            Your task is to compare the agent's response to the expected output.
-            Check the task, and the expected output and then compare the response to the expected output for the given task.
-            - Determine if the response matches the expected output exactly
-            - If it does not match exactly see if it matches in meaning and intent clearly and unambiguously.
-            - Provide an explanation of your comparison, highlighting similarities and differences
-            - Return a boolean indicating whether the response is correct and an explanation
-            - If the response says the same thing as expected output (first check verbatim, if not in intent), then it is correct, if not, then it is wrong. First compare them verbatim, if it does not match, then compare them in terms of meaning and intent.
+            function=f"""
+            Your task is to compare the agent's response to the expected output, considering the main role: {self.main_role}.
+
+            Based on the main role, determine the appropriate criteria for comparison for the given task.
+
+            - First, understand the main role and how it affects the expectations for the response.
+            - Review the task, the agent's response, and the expected output in the context of {self.main_role}.
+            - Decide whether an exact match is required, or if acceptable variations are permitted based on meaning, intent, or style.
+            - Determine if the response fulfills the requirements of the task and aligns with the main role.
+            - Provide a detailed explanation of your comparison, highlighting similarities and differences, and how they relate to the main role.
+            - Return a boolean indicating whether the response is correct and an explanation.
+
+            **Guidelines:**
+
+            - If {self.main_role} requires strict adherence to specific information, focus on exact matches.
+            - If {self.main_role} involves flexibility or creativity, allow for variations in wording or approach, as long as the core meaning aligns.
+            - Always consider how the response supports the objectives of {self.main_role}.
             """,
             user_prompt=input,
             response_model=ResponseComparisonOutput,
