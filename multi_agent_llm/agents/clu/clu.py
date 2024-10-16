@@ -197,6 +197,7 @@ class CLU:
             2. A detailed description of the agent's function and responsibilities based on relevant knowledge and task at hand
             3. Specific instructions to help solve the current task or work on it better with the main goal in mind based on relevant knowledge.
             4. Relevant knowledge to consider (if available)
+            5. Use latest prompting techniques and strategies to generate the best prompt like Chain of thought prompts (asking to think step by step) etc., or more novel and innovative strategies based on the task at hand 
             """,
             user_prompt=input,
             response_model=PromptGenerationOutput,
@@ -246,6 +247,7 @@ class CLU:
             - Suggest potential improvements or areas for further exploration
             - Identify any apparent knowledge gaps
             - Provide a performance score and detailed feedback
+            
             Consider the overall goal of the CLU while providing feedback.
             - question and evaluate things you are not sure about, and provide feedback on the reasoning and the response.
             - ask about knowledge gaps and provide feedback on the reasoning and the response or lack of such knowledge.
@@ -277,6 +279,7 @@ class CLU:
             - Suggest how this success can be replicated in future tasks
             - Highlight any particularly effective strategies used
             - Provide a performance score and detailed feedback
+            - if the answer is wrong, make sure to try diverse solutions that is not already there in the knowledge base.
             """,
             user_prompt=input,
             response_model=PositiveFeedbackOutput,
@@ -300,6 +303,9 @@ class CLU:
             - Identify gaps in knowledge or reasoning that led to the incorrect answer
             - Suggest specific improvements to the knowledge base or agent's function
             - Provide strategies to avoid similar mistakes in the future
+            - Suggest potential improvements or areas for further exploration
+            - Make sure in your suggestions you are not repeating the same thing that is already there in the knowledge base but provide new insights as to how to improve the response and what worked and what did not work. 
+            - Provide feedbacks of new knowledge that can be added to the knowledge base to try diverse solutions.
             """,
             user_prompt=input,
             response_model=NegativeFeedbackOutput,
@@ -324,6 +330,7 @@ class CLU:
             - Formulating general, reusable knowledge entries that can be applied to future tasks.
             - Provide a clear list of knowledge to be added to the database, the list should be diverse and each element should be unique and contain new knowledge to be added.
             - This list may include the following in a combined format as well: Concepts, ideas, principles, and guidelines for optimal performance.
+            - Maintain a record of what worked well and what did not work well as per the feedback and the reasoning.
             """,
             user_prompt=input,
             response_model=KnowledgeInsightOutput,
@@ -691,7 +698,7 @@ class CLU:
         }
 
     def store_prompt_feedback(self, prompt, task, performance, feedback):
-        insight = f"Prompt: {prompt}\nTask: {task}\nPerformance: {performance}\nFeedback: {feedback}"
+        insight = f"Prompt: {prompt}\nTask: {task}\nPerformance: {performance}\nFeedback: {feedback}. Do not store task specific data, store general insights that can be used in future tasks for adding."
         self.prompt_kmu.save_knowledge(insight)
 
     def print_knowledge_base(self):

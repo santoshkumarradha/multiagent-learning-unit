@@ -217,12 +217,22 @@ class KMU:
         existing_tags = [metadata["tags"] for metadata in existing_entries["metadatas"]]
 
         # Use the pruning agent to suggest modifications based on feedback
+        numbered_existing_content = "\n".join(
+            [
+                f"index {i}: {entry}"
+                for i, entry in enumerate(existing_entries["documents"])
+            ]
+        )
+        numbered_existing_tags = "\n".join(
+            [f"index {i}: {tag}" for i, tag in enumerate(existing_tags)]
+        )
+
         pruning_input = f"""
         Feedback: {feedback}
         Existing Content:
-        {existing_content}
+        {numbered_existing_content}
         Existing Tags:
-        {existing_tags}
+        {numbered_existing_tags}
         """
 
         pruning_suggestions = self._generate_response(
@@ -238,7 +248,7 @@ class KMU:
 
             Your response should include:
             1. A list of new or modified knowledge entries.
-            2. A list of indices (0-based) indicating which of the original entries should be updated or removed.
+            2. A list of indices (0-based) indicating which of the original entries should be updated or removed. Make sure to provide the correct indices as per the existing tags given.
 
             Remember:
             - You don't need to change everything, only modify what needs improvement.
