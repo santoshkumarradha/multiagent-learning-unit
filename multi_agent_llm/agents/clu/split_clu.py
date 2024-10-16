@@ -258,6 +258,8 @@ class CLU:
             - Question and evaluate things you are not sure about, and provide feedback on the reasoning and the response.
             - Ask about knowledge gaps and provide feedback on the reasoning and the response or lack of such knowledge.
             Important: Prefer giving detailed and comprehensive yet not verbose feedback that is not already there in the knowledge, but will help and is correct.
+            Make sure to align your feedback with the main goal of the CLU in mind.
+            Main Goal: {self.main_role}
             """,
             user_prompt=input,
             response_model=FeedbackOutput,
