@@ -12,7 +12,7 @@ from threading import Lock
 import pandas as pd
 from rich import print
 
-random.seed(1993)
+random.seed(1998)
 
 openai_key = open("../../openai.key").read().strip()
 os.environ["OPENAI_API_KEY"] = openai_key
@@ -112,7 +112,7 @@ clu = CLU(
     operational_agent=DefaultOperationalAgent(llm, verbose=False),
     collection_name="role-play-digital-twin-v4-relation",  # "role-play-v1-dialogue"(Holds the speaking style)
     compress_knowledge=False,
-    retrival_limit=15,
+    retrival_limit=20,
     llm=llm,
     pruning_queue_size=3,
     exploration_rate=0.01,
