@@ -104,7 +104,7 @@ def train_clu_batch(clu_instance, train_data: List[dict], batch_size: int):
         B. {question['options'][1]}
         C. {question['options'][2]}
         D. {question['options'][3]}
-        Pick the correct option and explain your reasoning.
+        Pick the correct option and explain your reasoning. think step by step.
         """
         expected_output = Reasoning(
             reasoning=question["explanation"],
@@ -204,8 +204,8 @@ if __name__ == "__main__":
     dataset = load_csv_to_questions(file_path)
 
     # Split data into train and test
-    n_train = 10
-    random.seed(1991)
+    n_train = 20
+    random.seed(1990)
     indices = list(range(len(dataset)))
     random.shuffle(indices)
     train_indices = indices[:n_train]
@@ -226,11 +226,11 @@ Key objectives:
 
 Your ultimate goal is to develop into an expert meta-learner, capable of reasoning through and solving any problem by continuously learning, adapting, and improving your problem-solving skills through practice, feedback, and iteration.
 """
-
+    collection_name = "gpqa_v4"
     clu = CLU(
         main_role=main_role,
         operational_agent=DefaultOperationalAgent(llm, verbose=False),
-        collection_name="gpqa-v1",  # "role-play-v1-dialogue"(Holds the speaking style)
+        collection_name=collection_name,  # "role-play-v1-dialogue"(Holds the speaking style)
         compress_knowledge=False,
         retrival_limit=15,
         llm=llm,
@@ -241,9 +241,7 @@ Your ultimate goal is to develop into an expert meta-learner, capable of reasoni
 
     training_cycles = 2
     for _ in range(training_cycles):
-        train_clu_batch(clu, train_data, batch_size=10)
+        train_clu_batch(clu, train_data, batch_size=5)
 
-    output_file = (
-        f"gpqa_results_CoT_{datetime.now().strftime('%Y_%m_%d_%H_%M_%S')}.json"
-    )
-    evaluate_clu(clu, test_data, batch_size=10, output_file=output_file)
+    output_file = f"gpqa_results_CoT_col-{collection_name}_{datetime.now().strftime('%Y_%m_%d_%H_%M_%S')}.json"
+    evaluate_clu(clu, test_data, batch_size=20, output_file=output_file)
