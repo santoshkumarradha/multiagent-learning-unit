@@ -151,7 +151,7 @@ def evaluate_clu(
         B. {question['options'][1]}
         C. {question['options'][2]}
         D. {question['options'][3]}
-        Pick the correct option and explain your reasoning.
+        Pick the correct option and explain your reasoning. Make sure you give final answer as A/B/C/D only and nothing else. Give the steps in the steps part and only alphabet in the answer part without any additional explanation or answers.
         """
         result = clu_instance.inference(question_str, response_schema=QA)
         return result
@@ -207,7 +207,7 @@ if __name__ == "__main__":
 
     # Split data into train and test
     n_train = 10
-    random.seed(1992)
+    random.seed(1991)
     indices = list(range(len(dataset)))
     random.shuffle(indices)
     train_indices = indices[:n_train]
