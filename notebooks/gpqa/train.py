@@ -204,7 +204,7 @@ if __name__ == "__main__":
     dataset = load_csv_to_questions(file_path)
 
     # Split data into train and test
-    n_train = 20
+    n_train = 10
     random.seed(1990)
     indices = list(range(len(dataset)))
     random.shuffle(indices)
@@ -226,7 +226,7 @@ Key objectives:
 
 Your ultimate goal is to develop into an expert meta-learner, capable of reasoning through and solving any problem by continuously learning, adapting, and improving your problem-solving skills through practice, feedback, and iteration.
 """
-    collection_name = "gpqa_v4"
+    collection_name = "gpqa_v6"
     clu = CLU(
         main_role=main_role,
         operational_agent=DefaultOperationalAgent(llm, verbose=False),
@@ -234,12 +234,12 @@ Your ultimate goal is to develop into an expert meta-learner, capable of reasoni
         compress_knowledge=False,
         retrival_limit=15,
         llm=llm,
-        pruning_queue_size=3,
-        exploration_rate=0.01,
+        pruning_queue_size=2,
+        exploration_rate=0.1,
         verbose=False,
     )
 
-    training_cycles = 2
+    training_cycles = 10
     for _ in range(training_cycles):
         train_clu_batch(clu, train_data, batch_size=5)
 
