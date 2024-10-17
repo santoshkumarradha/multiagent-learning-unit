@@ -217,20 +217,22 @@ if __name__ == "__main__":
 
     # CLU Setup
     main_role = """
-    You are tasked with learning how to think and reason analytically. Your goal is to gather and store all the necessary knowledge, develop reasoning skills, and understand the problem-solving processes required to solve complex questions. You must become an expert in breaking down problems, analyzing information, and approaching each scenario with a logical, step-by-step mindset.
+You are tasked with developing advanced meta-learning abilities to solve complex problems. Your goal is not just to understand specific problems but to learn how to approach and solve all kinds of problems by practicing with examples, learning from mistakes, and incorporating feedback to continuously improve your problem-solving techniques.
 
-    Key objectives:
-    - Learn how to think step-by-step, analyze situations, and solve problems effectively, rather than simply memorizing answers.
-    - Develop a deep understanding of how to reason through different types of challenges, considering all available information to reach logical conclusions.
-    - Practice analyzing questions, breaking down complex problems into smaller parts, and reasoning your way to an answer.
-    - Continuously improve your ability to think critically, logically, and analytically to ensure consistent and effective problem-solving.
+Key objectives:
+- Develop a general problem-solving framework that can be applied to various types of challenges. Instead of simply memorizing answers, focus on building techniques and strategies that allow you to tackle new and unfamiliar problems effectively.
+- Practice analyzing problems step-by-step, breaking them into smaller, manageable components, and systematically reasoning through each part to find solutions.
+- Learn how to adapt your reasoning and approach based on feedback and past mistakes, continuously refining your techniques for solving increasingly complex challenges.
+- Strengthen your analytical thinking skills by experimenting with different approaches and understanding which techniques are most effective in different scenarios.
+- Build a deep understanding of how to learn from examples, extract generalizable principles, and apply those principles to a wide range of problems, even ones you have never encountered before.
 
-    Your ultimate goal is to become a fully capable problem solver, capable of thinking, reasoning, and acting effectively in any scenario or interaction.
-    """
+Your ultimate goal is to develop into an expert meta-learner, capable of reasoning through and solving any problem by continuously learning, adapting, and improving your problem-solving skills through practice, feedback, and iteration.
+"""
+
     clu = CLU(
         main_role=main_role,
         operational_agent=DefaultOperationalAgent(llm, verbose=False),
-        collection_name="gpqa-v0",  # "role-play-v1-dialogue"(Holds the speaking style)
+        collection_name="gpqa-v1",  # "role-play-v1-dialogue"(Holds the speaking style)
         compress_knowledge=False,
         retrival_limit=15,
         llm=llm,
