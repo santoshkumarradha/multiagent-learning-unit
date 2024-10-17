@@ -89,9 +89,7 @@ class Reasoning(BaseModel):
 
 
 class QA(BaseModel):
-    steps: List[Reasoning] = Field(
-        ..., description="List of steps in the reasoning process"
-    )
+    steps: List[str] = Field(..., description="List of steps in the reasoning process")
     answer: str = Field(
         ..., description="Final answer (A/B/C/D) without any additional explanation."
     )
